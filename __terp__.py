@@ -2,7 +2,7 @@
     "name": "CRM Poweremail",
     "version": "1.0",
     "depends": ["base", "crm", "poweremail"],
-    "author": "Eduard Carreras",
+    "author": "GISCE-TI",
     "category": "CRM",
     "description": """
     This module provide :
@@ -12,7 +12,7 @@
           See: https://github.com/openlabs/poweremail/issues/24
     """,
     "init_xml": [],
-    'update_xml': [],
+    'update_xml': ['crm_view.xml'],
     'demo_xml': [],
     'installable': True,
     'active': False,
