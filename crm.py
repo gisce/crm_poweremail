@@ -3,6 +3,7 @@ from datetime import datetime
 from email.utils import make_msgid
 
 from osv import osv, fields
+from tools.translate import _
 
 class CrmCase(osv.osv):
     """Adding poweremail features.
@@ -91,7 +92,8 @@ class CrmCase(osv.osv):
         """
         if not context:
             context = {}
-        for case in self.browse(cursor, uid, ids, context):
+        cases = self.browse(cursor, uid, ids, context)
+        for case in cases:
             if not case.email_from:
                 raise osv.except_osv(_('Error!'),
                         _('You must put a Partner eMail to use this action!'))
