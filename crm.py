@@ -75,6 +75,18 @@ class CrmCase(osv.osv):
         })
         return True
 
+    def remind_user(self, cursor, uid, ids, context=None, attach=False,
+                    destination=True):
+        """Using poweremail.
+        """
+        raise osv.except_osv('TODO', 'To be implemented')
+
+    def case_log_reply(self, cursor, uid, ids, context=None, email=False,
+                       *args):
+        """Using poweremail.
+        """
+        raise osv.except_osv('TODO', 'To be implemented')
+
     def _conversation_mails(self, cursor, uid, ids, field_name, args,
                             context=None):
         """Returns all the mails from this conversation (case).
