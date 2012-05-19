@@ -40,6 +40,8 @@ class CrmCase(osv.osv):
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
         """
+        if not context:
+            context = {}
         pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
         body = self.format_mail(case, body)
@@ -71,21 +73,57 @@ class CrmCase(osv.osv):
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
-            'conversation_id': case.conversation_id.id
+            'conversation_id': case.conversation_id.id,
+            'pem_cc': context.get('email_cc', False)
         })
         return True
 
     def remind_user(self, cursor, uid, ids, context=None, attach=False,
                     destination=True):
-        """Using poweremail.
+        """For now, we can leave this method calling original one
         """
-        raise osv.except_osv('TODO', 'To be implemented')
+        super(CrmCase, self).remind_user(curosr, uid, ids, context, attach,
+                                         destination)
 
     def case_log_reply(self, cursor, uid, ids, context=None, email=False,
                        *args):
         """Using poweremail.
         """
-        raise osv.except_osv('TODO', 'To be implemented')
+        if not context:
+            context = {}
+        for case in self.browse(cursor, uid, ids, context):
+            if not case.email_from:
+                raise osv.except_osv(_('Error!'),
+                        _('You must put a Partner eMail to use this action!'))
+            if not case.user_id:
+                raise osv.except_osv(_('Error!'),
+                        _('You must define a responsible user for this case '
+                          'in order to use this action!'))
+            if not case.description:
+                raise osv.except_osv(_('Error!'),
+                        _('Can not send mail with empty body,you should have '
+                          'description in the body'))
+        self.__history(cursor, uid, cases, _('Send'), history=True, email=False)
+        for case in cases:
+            self.write(cursor, uid, [case.id], {
+                'description': False,
+                'som': False,
+                'canal_id': False,
+                })
+            emails = [case.email_from]
+            if case.email_cc:
+                context['email_cc'] = ', '.join(
+                    set([x.strip()
+                    for x in case.email_cc.split(',')])
+                )
+            body = case.description or ''
+            emailfrom = case.user_id.address_id \
+                        and case.user_id.address_id.email or False
+            if not emailfrom:
+                raise osv.except_osv(_('Error!'),
+                        _("No E-Mail ID Found for your Company address!"))
+            self.email_send(cursor, uid, case, emails, body, context)
+        return True
 
     def _conversation_mails(self, cursor, uid, ids, field_name, args,
                             context=None):
