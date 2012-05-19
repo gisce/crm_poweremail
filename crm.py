@@ -105,7 +105,7 @@ class CrmCase(osv.osv):
                 raise osv.except_osv(_('Error!'),
                         _('Can not send mail with empty body,you should have '
                           'description in the body'))
-        self.__history(cursor, uid, cases, _('Send'), history=True, email=False)
+        #self.__history(cursor, uid, cases, _('Send'), history=True, email=False)
         for case in cases:
             self.write(cursor, uid, [case.id], {
                 'description': False,
