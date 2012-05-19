@@ -11,13 +11,14 @@ class CrmCase(osv.osv):
         """Overwrite create method to create conversation if not in vals.
         """
         res_id = super(CrmCase, self).create(cursor, uid, vals, context)
+        upd  = {'name': vals['name']}
         if 'conversation_id' not in vals:
             conv_obj = self.pool.get('poweremail.conversation')
             conv_id = conv_obj.create(cursor, uid,
                 {'name': '[%s] %s' % (res_id, vals['name'])}
             )
-            self.write(cursor, uid, [res_id], {'conversation_id': conv_id,
-                                               'name': vals['name']})
+            upd['conversation_id'] = conv_id
+        self.write(cursor, uid, [res_id], upd)
         return res_id
 
     def write(self, cursor, uid, ids, vals, context=None):
