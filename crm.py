@@ -155,3 +155,17 @@ class CrmCase(osv.osv):
     }
 
 CrmCase()
+
+class CrmCaseRule(osv.osv):
+    """Case rule with Poweremail templates.
+    """
+    _name = 'crm.case.rule'
+    _inherit = 'crm.case.rule'
+
+    _colums = {
+        'pm_template': fields.many2one('poweremail.templates',
+                                       'Poweremail Template',
+                                       ondelete='restrict')
+    }
+
+CrmCaseRule()
