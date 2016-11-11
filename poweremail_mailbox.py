@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from osv import osv
+import qreu
+
 
 class PoweremailMailboxCRM(osv.osv):
     """Overwriting create.
@@ -10,16 +12,21 @@ class PoweremailMailboxCRM(osv.osv):
     def create(self, cursor, uid, vals, context=None):
         """If some crm section reply_to has this pem_account create a CRM Case.
         """
+        if context is None:
+            context = {}
         res_id = super(PoweremailMailboxCRM, self).create(cursor, uid, vals,
                                                           context)
-        p_mail = self.browse(cursor, uid, res_id)
+        p_mail = self.browse(cursor, uid, res_id, context=context)
+        mail = qreu.Email(p_mail.pem_mail_orig)
         case_obj = self.pool.get('crm.case')
         section_obj = self.pool.get('crm.case.section')
-        account_obj = self.pool.get('poweremail.core_accounts')
-        pem_account = account_obj.browse(cursor, uid, vals['pem_account_id'])
-        search_params = [('reply_to', '=', p_mail.pem_account_id.email_id)]
+        reply_to = mail.recipients.addresses
+        search_params = [('reply_to', 'in', reply_to)]
         section_id = section_obj.search(cursor, uid, search_params)
         if section_id:
+            p_mail.complete_mail()
+            # Fuck re-browse to get the content
+            p_mail = self.browse(cursor, uid, res_id, context=context)
             section_id = section_id[0]
             case_id = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
