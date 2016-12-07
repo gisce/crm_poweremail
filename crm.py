@@ -5,6 +5,7 @@ from email.utils import make_msgid
 from osv import osv, fields
 from tools.translate import _
 
+
 class CrmCase(osv.osv):
     """Adding poweremail features.
     """
@@ -18,7 +19,8 @@ class CrmCase(osv.osv):
         upd = {'name': vals['name']}
         if 'conversation_id' not in vals:
             conv_obj = self.pool.get('poweremail.conversation')
-            conv_id = conv_obj.create(cursor, uid,
+            conv_id = conv_obj.create(
+                cursor, uid,
                 {'name': '[%s] %s' % (res_id, vals['name'])}
             )
             upd['conversation_id'] = conv_id
@@ -83,7 +85,7 @@ class CrmCase(osv.osv):
                     destination=True):
         """For now, we can leave this method calling original one
         """
-        super(CrmCase, self).remind_user(curosr, uid, ids, context, attach,
+        super(CrmCase, self).remind_user(cursor, uid, ids, context, attach,
                                          destination)
 
     def case_log_reply(self, cursor, uid, ids, context=None, email=False,
