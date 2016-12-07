@@ -70,6 +70,7 @@ class CrmCase(osv.osv):
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
+            'pem_mail_orig': case.conversation_id.mails[-1].pem_mail_orig,
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
             'pem_body_text': body,
             'pem_account_id': pem_account_id[0],
