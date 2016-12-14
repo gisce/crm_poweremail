@@ -34,7 +34,7 @@ class PoweremailMailboxCRM(osv.osv):
             if not case_id:
                 add_obj = self.pool.get('res.partner.address')
                 addr_id = add_obj.search(cursor, uid, [
-                    ('email', '=', p_mail.pem_from)
+                    ('email', '=', qreu.address.parse(p_mail.pem_from).address)
                 ])
                 section = section_obj.browse(cursor, uid, section_id)
                 case_vals = {
