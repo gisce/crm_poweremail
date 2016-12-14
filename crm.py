@@ -157,29 +157,4 @@ class CrmCase(osv.osv):
         )
     }
 
-    def __history(self, cr, uid, cases, keyword, history=False, email=False,
-                  context={}):
-        for case in cases:
-            data = {
-                'name': keyword,
-                'som': case.som.id,
-                'canal_id': case.canal_id.id,
-                'user_id': uid,
-                'date': datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
-                'case_id': case.id,
-                'section_id': case.section_id.id
-            }
-            obj = self.pool.get('crm.case.log')
-            if history and case.description:
-                user_obj = self.pool.get('res.users')
-                obj = self.pool.get('crm.case.history')
-                data['description'] = case.description
-                data['email'] = email or \
-                                user_obj.browse(cr, uid,
-                                                uid).address_id.email or False
-            obj.create(cr, uid, data, context)
-        return True
-
-    _history = __history
-
 CrmCase()
