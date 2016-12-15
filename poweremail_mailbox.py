@@ -24,7 +24,8 @@ class PoweremailMailboxCRM(osv.osv):
         search_params = [('reply_to', 'in', reply_to)]
         section_id = section_obj.search(cursor, uid, search_params)
         if section_id:
-            p_mail.complete_mail()
+            # Trying to get mail for new email, fails cause no mail on server
+            # p_mail.complete_mail()
             # Fuck re-browse to get the content
             p_mail = self.browse(cursor, uid, res_id, context=context)
             section_id = section_id[0]
