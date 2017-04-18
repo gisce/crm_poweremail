@@ -17,7 +17,7 @@ class PoweremailMailboxCRM(osv.osv):
         res_id = super(PoweremailMailboxCRM, self).create(cursor, uid, vals,
                                                           context)
         p_mail = self.browse(cursor, uid, res_id, context=context)
-        if vals['conversation_id']:
+        if vals.get('conversation_id', False):
             # If conversation exists, there's already a CRM Case
             return res_id
         mail = qreu.Email(p_mail.pem_mail_orig)
