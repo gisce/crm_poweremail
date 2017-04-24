@@ -23,7 +23,14 @@ class PoweremailMailboxCRM(osv.osv):
             reply_to = mail.recipients.addresses
         else:
             # If no mail source found, get recipients from pem
-            reply_to = p_mail.pem_to + p_mail.pem_cc + p_mail.pem_bcc
+            reply_mails = []
+            reply_mails.append(p_mail.pem_cc) \
+                if isinstance(
+                    p_mail.pem_cc, basestring
+                ) else reply_mails.append(', '.join(p_mail.pem_cc))
+            reply_mails.append(p_mail.pem_to)
+            reply_mails.append(p_mail.pem_bcc)
+            reply_to = ', '.join(reply_mails)
         case_obj = self.pool.get('crm.case')
         section_obj = self.pool.get('crm.case.section')
         search_params = [('reply_to', 'in', reply_to)]
