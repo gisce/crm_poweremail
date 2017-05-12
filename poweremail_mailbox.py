@@ -17,10 +17,15 @@ class PoweremailMailboxCRM(osv.osv):
         res_id = super(PoweremailMailboxCRM, self).create(cursor, uid, vals,
                                                           context)
         p_mail = self.browse(cursor, uid, res_id, context=context)
-        mail = qreu.Email(p_mail.pem_mail_orig)
+        # If original format mail, use it
+        if p_mail.pem_mail_orig:
+            mail = qreu.Email(p_mail.pem_mail_orig)
+            reply_to = mail.recipients.addresses
+        else:
+            # If no mail source found, the mail is being sent
+            return res_id
         case_obj = self.pool.get('crm.case')
         section_obj = self.pool.get('crm.case.section')
-        reply_to = mail.recipients.addresses
         search_params = [('reply_to', 'in', reply_to)]
         section_id = section_obj.search(cursor, uid, search_params)
         if section_id:
