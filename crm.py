@@ -170,4 +170,15 @@ class CrmCaseRule(osv.osv):
                                        ondelete='restrict')
     }
 
+    def get_email_body(self, cr, uid, ids, context=None):
+        action_body = super(CrmCaseRule, self).get_email_body(cr, uid,
+                                                              ids, context)
+        action_template = self.read(
+            cr, uid, ids, ['pm_template_id'])[0]['pm_template_id'][0]
+        pm_template_obj = self.pool.get('poweremail.templates')
+        template_body = pm_template_obj.read(
+            cr, uid, action_template, ['def_body_text'])['def_body_text']
+        return template_body or action_body
+
+
 CrmCaseRule()
