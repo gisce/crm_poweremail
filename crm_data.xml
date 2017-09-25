@@ -34,7 +34,7 @@ Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
 
 The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been updated to the state 'Pending'.
 
-Awaiting for Client approves
+Awaiting for review.
 
             </field>
         </record>
