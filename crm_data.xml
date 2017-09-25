@@ -50,9 +50,7 @@ Awaiting for Client approves
             <field name="save_to_drafts" eval="True"/>
             <field name="def_body_text"> Dear ${object.partner_id.name},
 
-The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been updated to the state 'Pending'.
-
-Awaiting for Client approves
+The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been CLOSED.
 
             </field>
         </record>
