@@ -54,6 +54,30 @@ The case with identifier: #${object.id} with the subject: "${upper(object.name)}
 
             </field>
         </record>
+
         <!-- CRM - Rules -->
+
+        <record model="crm.case.rule" id="crm_poweremail_rule_open">
+            <field name="name">Poweremail Open Case</field>
+            <field name="active">True</field>
+            <field name="trg_state_from">draft</field>
+            <field name="trg_state_to">open</field>
+            <field name="pm_template_id" ref="crm_poweremail_case_template_open"/>
+        </record>
+
+        <record model="crm.case.rule" id="crm_poweremail_rule_pending">
+            <field name="name">Poweremail Open Case</field>
+            <field name="active">True</field>
+            <field name="trg_state_from">open</field>
+            <field name="trg_state_to">pending</field>
+            <field name="pm_template_id" ref="crm_poweremail_case_template_pending"/>
+
+        <record model="crm.case.rule" id="crm_poweremail_rule_close">
+            <field name="name">Poweremail Open Case</field>
+            <field name="active">True</field>
+            <field name="trg_state_from">pending</field>
+            <field name="trg_state_to">done</field>
+            <field name="pm_template_id" ref="crm_poweremail_case_template_close"/>
+        </record>
     </data>
 </openerp>
