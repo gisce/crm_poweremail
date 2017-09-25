@@ -71,6 +71,7 @@ The case with identifier: #${object.id} with the subject: "${upper(object.name)}
             <field name="trg_state_from">open</field>
             <field name="trg_state_to">pending</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_pending"/>
+        </record>
 
         <record model="crm.case.rule" id="crm_poweremail_rule_close">
             <field name="name">Poweremail Open Case</field>
