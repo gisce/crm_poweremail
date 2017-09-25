@@ -147,7 +147,7 @@ class CrmCase(osv.osv):
         'conversation_id': fields.many2one(
             'poweremail.conversation',
             'Conversation',
-             ondelete='restrict'
+            ondelete='restrict'
         ),
         'conversation_mails': fields.function(
             _conversation_mails,
@@ -159,6 +159,7 @@ class CrmCase(osv.osv):
 
 CrmCase()
 
+
 class CrmCaseRule(osv.osv):
     """Case rule with Poweremail templates.
     """
@@ -166,9 +167,8 @@ class CrmCaseRule(osv.osv):
     _inherit = 'crm.case.rule'
 
     _columns = {
-        'pm_template_id': fields.many2one('poweremail.templates',
-                                       'Poweremail Template',
-                                       ondelete='restrict')
+        'pm_template_id': fields.many2one(
+            'poweremail.templates', 'Poweremail Template', ondelete='restrict')
     }
 
     def get_email_body(self, cr, uid, rule_id, case, context=None):
