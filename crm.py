@@ -178,16 +178,25 @@ class CrmCaseRule(osv.osv):
             cr, uid, rule_id, case, context)
         action = self.pool.get('crm.case.rule').browse(cr, uid, rule_id)
         if action.pm_template_id:
-            template_to = (
-                Template(action.pm_template_id.def_to).render(object=case))
+            try:
+                template_to = (
+                    Template(action.pm_template_id.def_to).render(object=case))
+            except:
+                raise osv.except_osv(_('Error!'), ('Poweremail template '
+                                                   '"Email TO" has bad '
+                                                   'formatted address'))
             if template_to:
                 emails.append(template_to)
-            template_cc = (
-                Template(action.pm_template_id.def_cc).render(object=case))
+            try:
+                template_cc = (
+                    Template(action.pm_template_id.def_cc).render(object=case))
+            except:
+                raise osv.except_osv(_('Error!'), ('Poweremail template '
+                                                   '"Email CC" has bad '
+                                                   'formatted address'))
             if template_cc:
                 emails += template_cc.split(',')
         return emails
-
 
     def get_email_body(self, cr, uid, rule_id, case, context=None):
         if not context:
