@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenERP Server 5.0.14\n"
 "Report-Msgid-Bugs-To: support@openerp.com\n"
-"POT-Creation-Date: 2017-09-25 14:17\n"
-"PO-Revision-Date: 2017-09-25 14:17\n"
+"POT-Creation-Date: 2017-09-29 13:38\n"
+"PO-Revision-Date: 2017-09-29 13:38\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,20 +16,8 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
-msgid " Dear ${object.partner_id.name},\n"
-"${from datetime import datetime}\n"
-"In date ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} the case has been Opened with the subject: ${upper(object.name)}\n"
-"Case Identifier: #${object.id}\n"
-"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
-"\n"
-"            "
-msgstr ""
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:111
-#, python-format
-msgid "Send"
+#: field:crm.case.rule,pm_template_id:0
+msgid "Poweremail Template"
 msgstr ""
 
 #. module: crm_poweremail
@@ -40,8 +28,14 @@ msgid "${object.name}"
 msgstr ""
 
 #. module: crm_poweremail
-#: view:crm.case:0
-msgid "Conversations"
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
+msgid "Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been updated to the state 'Pending'.\n"
+"\n"
+"Awaiting for review.\n"
+"\n"
+"            "
 msgstr ""
 
 #. module: crm_poweremail
@@ -53,6 +47,17 @@ msgstr ""
 #: code:addons/crm_poweremail/crm.py:109
 #, python-format
 msgid "Can not send mail with empty body,you should have description in the body"
+msgstr ""
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid "Dear ${object.partner_id.name},\n"
+"\n"
+"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
+"\n"
+"            "
 msgstr ""
 
 #. module: crm_poweremail
@@ -95,8 +100,9 @@ msgid "No E-Mail ID Found for your Company address or missing reply address in s
 msgstr ""
 
 #. module: crm_poweremail
-#: field:crm.case.rule,pm_template_id:0
-msgid "Poweremail Template"
+#: code:addons/crm_poweremail/crm.py:111
+#, python-format
+msgid "Send"
 msgstr ""
 
 #. module: crm_poweremail
@@ -111,28 +117,13 @@ msgid "History"
 msgstr ""
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
-msgid " Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been updated to the state 'Pending'.\n"
-"\n"
-"Awaiting for review.\n"
-"\n"
-"            "
-msgstr ""
-
-#. module: crm_poweremail
 #: model:ir.module.module,shortdesc:crm_poweremail.module_meta_information
 msgid "CRM Poweremail"
 msgstr ""
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
-msgid " Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been CLOSED.\n"
-"\n"
-"            "
+#: view:crm.case:0
+msgid "Conversations"
 msgstr ""
 
 #. module: crm_poweremail
@@ -165,5 +156,14 @@ msgid "\n"
 "    NOTE: Needs poweremail with conversations suport.\n"
 "          See: https://github.com/openlabs/poweremail/issues/24\n"
 "    "
+msgstr ""
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
+msgid "Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
+"\n"
+"            "
 msgstr ""
 

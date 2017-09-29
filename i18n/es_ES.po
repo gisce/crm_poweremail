@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GISCE-ERP\n"
 "Report-Msgid-Bugs-To: https://github.com/gisce/erp/issues\n"
-"POT-Creation-Date: 2017-09-25 14:17\n"
-"PO-Revision-Date: 2017-09-25 12:48+0000\n"
+"POT-Creation-Date: 2017-09-29 13:38\n"
+"PO-Revision-Date: 2017-09-29 11:42+0000\n"
 "Last-Translator: Jaume  Florez Valenzuela <jflorez@gisce.net>\n"
 "Language-Team: Spanish (Spain) <erp@dev.gisce.net>\n"
 "MIME-Version: 1.0\n"
@@ -18,22 +18,9 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
-msgid ""
-" Dear ${object.partner_id.name},\n"
-"${from datetime import datetime}\n"
-"In date ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} the case has been Opened with the subject: ${upper(object.name)}\n"
-"Case Identifier: #${object.id}\n"
-"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
-"\n"
-"            "
-msgstr " Estimado/da ${object.partner_id.name},\n${from datetime import datetime}\nEn fecha ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} el caso se ha Abierto con el asunto: ${upper(object.name)}\nIdentificador del Caso: #${object.id}\nResponsable: ${object.user_id.name} - ${object.user_id.address_id.email}\n\n            "
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:111
-#, python-format
-msgid "Send"
-msgstr "Enviar"
+#: field:crm.case.rule,pm_template_id:0
+msgid "Poweremail Template"
+msgstr "Plantilla Poweremail"
 
 #. module: crm_poweremail
 #: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
@@ -43,9 +30,16 @@ msgid "${object.name}"
 msgstr "${object.name}"
 
 #. module: crm_poweremail
-#: view:crm.case:0
-msgid "Conversations"
-msgstr "Conversaciones"
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been updated to the state 'Pending'.\n"
+"\n"
+"Awaiting for review.\n"
+"\n"
+"            "
+msgstr "Estimado/da ${object.partner_id.name},\n\nEl caso con identificador: #${object.id} con el asunto: \\\"${object.name}\\\"; ha pasado al estado: 'Pending'.\n\nEsperando revisión.    "
 
 #. module: crm_poweremail
 #: field:crm.case,conversation_mails:0
@@ -58,6 +52,18 @@ msgstr "desconocido"
 msgid ""
 "Can not send mail with empty body,you should have description in the body"
 msgstr "No se puede enviar un correo sin cuerpo, debería haber una descripción en el cuerpo"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
+"\n"
+"            "
+msgstr "Estimado/da ${object.partner_id.name},\n\nEn fecha ${date_now} el caso se ha Abierto con el asunto: ${object.name}\nIdentificador del Caso: #${object.id}\nResponsable: ${object.user_id.name} - {object.user_id.address_id.email}\n "
 
 #. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:129
@@ -100,9 +106,10 @@ msgid ""
 msgstr "No se ha encontrado el ID de correo electrónico para la dirección de su Compañía o en la dirección de resupesta de esta sección!"
 
 #. module: crm_poweremail
-#: field:crm.case.rule,pm_template_id:0
-msgid "Poweremail Template"
-msgstr "Plantilla Poweremail"
+#: code:addons/crm_poweremail/crm.py:111
+#, python-format
+msgid "Send"
+msgstr "Enviar"
 
 #. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:105
@@ -118,31 +125,14 @@ msgid "History"
 msgstr "Historial"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
-msgid ""
-" Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been updated to the state 'Pending'.\n"
-"\n"
-"Awaiting for review.\n"
-"\n"
-"            "
-msgstr " Estimado/da ${object.partner_id.name},\n\nEl caso con identificador: #${object.id} con el asunto: \"${upper(object.name)}\"; ha pasado al estado: 'Pending'.\n\nEsperando revisión.\n\n            "
-
-#. module: crm_poweremail
 #: model:ir.module.module,shortdesc:crm_poweremail.module_meta_information
 msgid "CRM Poweremail"
 msgstr "CRM Poweremail"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
-msgid ""
-" Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been CLOSED.\n"
-"\n"
-"            "
-msgstr " Estimado/da ${object.partner_id.name},\n\nEl caso con el identificador: #${object.id}; con el asunto: \"${upper(object.name)}\" se ha CERRADO.\n\n            "
+#: view:crm.case:0
+msgid "Conversations"
+msgstr "Conversaciones"
 
 #. module: crm_poweremail
 #: field:crm.case,conversation_id:0
@@ -176,3 +166,13 @@ msgid ""
 "          See: https://github.com/openlabs/poweremail/issues/24\n"
 "    "
 msgstr "\n    Este módulo provee:\n        * Integración entre CRM y Poweremail\n        \n    NOTA: Se necesita poweremail con soporte para conversaciones.\n          Ver: https://github.com/openlabs/poweremail/issues/24\n    "
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
+"\n"
+"            "
+msgstr "Estimado/da ${object.partner_id.name},\n\nEl caso con el identificador: #${object.id}; con el asunto: \\\"${object.name}\\\" se ha CERRADO.\n "

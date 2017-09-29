@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GISCE-ERP\n"
 "Report-Msgid-Bugs-To: https://github.com/gisce/erp/issues\n"
-"POT-Creation-Date: 2017-09-25 14:17\n"
-"PO-Revision-Date: 2017-09-25 12:47+0000\n"
+"POT-Creation-Date: 2017-09-29 13:38\n"
+"PO-Revision-Date: 2017-09-29 11:47+0000\n"
 "Last-Translator: Jaume  Florez Valenzuela <jflorez@gisce.net>\n"
 "Language-Team: Catalan (Spain) <erp@dev.gisce.net>\n"
 "MIME-Version: 1.0\n"
@@ -18,22 +18,9 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
-msgid ""
-" Dear ${object.partner_id.name},\n"
-"${from datetime import datetime}\n"
-"In date ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} the case has been Opened with the subject: ${upper(object.name)}\n"
-"Case Identifier: #${object.id}\n"
-"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
-"\n"
-"            "
-msgstr " Estimat/ada ${object.partner_id.name},\n${from datetime import datetime}\nEn data ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} el cas s'ha Obert amb l'assumpte: ${upper(object.name)}\nIdentificador del Cas: #${object.id}\nResponsable: ${object.user_id.name} - ${object.user_id.address_id.email}\n\n            "
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:111
-#, python-format
-msgid "Send"
-msgstr "Enviar"
+#: field:crm.case.rule,pm_template_id:0
+msgid "Poweremail Template"
+msgstr "Plantilla Poweremail"
 
 #. module: crm_poweremail
 #: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
@@ -43,9 +30,16 @@ msgid "${object.name}"
 msgstr "${object.name}"
 
 #. module: crm_poweremail
-#: view:crm.case:0
-msgid "Conversations"
-msgstr "Converses"
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been updated to the state 'Pending'.\n"
+"\n"
+"Awaiting for review.\n"
+"\n"
+"            "
+msgstr "Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha actualitzat al estat 'Pending'.\n\nEsperant la revisió.\n\n            "
 
 #. module: crm_poweremail
 #: field:crm.case,conversation_mails:0
@@ -58,6 +52,18 @@ msgstr "desconegut"
 msgid ""
 "Can not send mail with empty body,you should have description in the body"
 msgstr "No es pot enviar un correu amb el cos buit, hauria d'haver una descripció en el cos del missatge"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
+"\n"
+"            "
+msgstr "Estimat/ada ${object.partner_id.name},\n\nEn data ${date_now} s'ha Obert un cas amb l'assumpte: ${object.name}\nIdentificador del cas: #${object.id}\nResponsable: ${object.user_id.name} - ${object.user_id.address_id.email}\n\n            "
 
 #. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:129
@@ -100,9 +106,10 @@ msgid ""
 msgstr "No s'ha trobat el ID del correu electrònic de la seva Companyia o falta el correu electrònic de resposta per aquesta secció!"
 
 #. module: crm_poweremail
-#: field:crm.case.rule,pm_template_id:0
-msgid "Poweremail Template"
-msgstr "Plantilla Poweremail"
+#: code:addons/crm_poweremail/crm.py:111
+#, python-format
+msgid "Send"
+msgstr "Enviar"
 
 #. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:105
@@ -118,31 +125,14 @@ msgid "History"
 msgstr "Historial"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
-msgid ""
-" Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been updated to the state 'Pending'.\n"
-"\n"
-"Awaiting for review.\n"
-"\n"
-"            "
-msgstr "Estimat/ada ${object.partner_id.name},\n\nEl Cas amb indentificador: #${object.id}; amb l'assumpte: \"${upper(object.name)}\" s'ha actualitzat al estat 'Pendent'.\n\nEsperant una revisió per part del client.\n\n            "
-
-#. module: crm_poweremail
 #: model:ir.module.module,shortdesc:crm_poweremail.module_meta_information
 msgid "CRM Poweremail"
 msgstr "CRM Poweremail"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
-msgid ""
-" Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been CLOSED.\n"
-"\n"
-"            "
-msgstr " Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id}; amb l'assumpte: \"${upper(object.name)}\" s'ha TANCAT.\n\n            "
+#: view:crm.case:0
+msgid "Conversations"
+msgstr "Converses"
 
 #. module: crm_poweremail
 #: field:crm.case,conversation_id:0
@@ -176,3 +166,13 @@ msgid ""
 "          See: https://github.com/openlabs/poweremail/issues/24\n"
 "    "
 msgstr "\n    Aquest mòdul proveeix :\n        * Integració entre CRM i Poweremail\n        \n    NOTA: Es necessita poweremail amb suport per converses.\n          See: https://github.com/openlabs/poweremail/issues/24\n    "
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
+"\n"
+"            "
+msgstr "Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha TANCAT.\n\n            "
