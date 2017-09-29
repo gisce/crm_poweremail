@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from email.utils import make_msgid
+from mako.template import Template
 
 from osv import osv, fields
 from tools.translate import _
@@ -146,7 +147,7 @@ class CrmCase(osv.osv):
         'conversation_id': fields.many2one(
             'poweremail.conversation',
             'Conversation',
-             ondelete='restrict'
+            ondelete='restrict'
         ),
         'conversation_mails': fields.function(
             _conversation_mails,
@@ -157,3 +158,36 @@ class CrmCase(osv.osv):
     }
 
 CrmCase()
+
+
+class CrmCaseRule(osv.osv):
+    """Case rule with Poweremail templates.
+    """
+    _name = 'crm.case.rule'
+    _inherit = 'crm.case.rule'
+
+    _columns = {
+        'pm_template_id': fields.many2one(
+            'poweremail.templates', 'Poweremail Template', ondelete='restrict')
+    }
+
+    def get_email_body(self, cr, uid, rule_id, case, context=None):
+        if not context:
+            context = {}
+        if isinstance(rule_id, list):
+            rule_id = rule_id[0]
+        if isinstance(case, list):
+            case = case[0]
+        action_body = super(CrmCaseRule, self).get_email_body(
+            cr, uid, rule_id, case, context)
+        action_template = self.read(
+            cr, uid, rule_id, ['pm_template_id'])['pm_template_id'][0]
+        pm_template_obj = self.pool.get('poweremail.templates')
+        template_body = pm_template_obj.read(
+            cr, uid, action_template, ['def_body_text'])['def_body_text']
+        body = template_body or action_body
+        rendered_body = Template(body).render(object=case)
+        return rendered_body
+
+
+CrmCaseRule()

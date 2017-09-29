@@ -1,0 +1,178 @@
+# Translation of OpenERP Server.
+# This file contains the translation of the following modules:
+# 
+# Translators:
+# Jaume  Florez Valenzuela <jflorez@gisce.net>, 2017.
+msgid ""
+msgstr ""
+"Project-Id-Version: GISCE-ERP\n"
+"Report-Msgid-Bugs-To: https://github.com/gisce/erp/issues\n"
+"POT-Creation-Date: 2017-09-25 14:17\n"
+"PO-Revision-Date: 2017-09-25 12:47+0000\n"
+"Last-Translator: Jaume  Florez Valenzuela <jflorez@gisce.net>\n"
+"Language-Team: Catalan (Spain) <erp@dev.gisce.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Language: ca_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid ""
+" Dear ${object.partner_id.name},\n"
+"${from datetime import datetime}\n"
+"In date ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} the case has been Opened with the subject: ${upper(object.name)}\n"
+"Case Identifier: #${object.id}\n"
+"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
+"\n"
+"            "
+msgstr " Estimat/ada ${object.partner_id.name},\n${from datetime import datetime}\nEn data ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} el cas s'ha Obert amb l'assumpte: ${upper(object.name)}\nIdentificador del Cas: #${object.id}\nResponsable: ${object.user_id.name} - ${object.user_id.address_id.email}\n\n            "
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:111
+#, python-format
+msgid "Send"
+msgstr "Enviar"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_open
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_pending
+msgid "${object.name}"
+msgstr "${object.name}"
+
+#. module: crm_poweremail
+#: view:crm.case:0
+msgid "Conversations"
+msgstr "Converses"
+
+#. module: crm_poweremail
+#: field:crm.case,conversation_mails:0
+msgid "unknown"
+msgstr "desconegut"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:109
+#, python-format
+msgid ""
+"Can not send mail with empty body,you should have description in the body"
+msgstr "No es pot enviar un correu amb el cos buit, hauria d'haver una descripció en el cos del missatge"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:129
+#, python-format
+msgid "No E-Mail ID Found for your Company address!"
+msgstr "No s'ha trobat la ID del correu electrònic de la direcció de la seva Companyia"
+
+#. module: crm_poweremail
+#: constraint:ir.ui.view:0
+msgid "Invalid XML for View Architecture!"
+msgstr "Arquitectura del XML invàlida!"
+
+#. module: crm_poweremail
+#: view:crm.case.rule:0
+msgid "E-Mail Actions"
+msgstr "Accions de correu electrònic"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:60 code:addons/crm_poweremail/crm.py:67
+#: code:addons/crm_poweremail/crm.py:101 code:addons/crm_poweremail/crm.py:104
+#: code:addons/crm_poweremail/crm.py:108 code:addons/crm_poweremail/crm.py:128
+#, python-format
+msgid "Error!"
+msgstr "Error!"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:68
+#, python-format
+msgid ""
+"No E-Mail ID Found in Power Email for this section or missing reply address "
+"in section."
+msgstr "No s'ha trobat el ID del correu electrònic per aquesta secció o falta el correu electrònic de resposta per aquesta secció."
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:61
+#, python-format
+msgid ""
+"No E-Mail ID Found for your Company address or missing reply address in "
+"section!"
+msgstr "No s'ha trobat el ID del correu electrònic de la seva Companyia o falta el correu electrònic de resposta per aquesta secció!"
+
+#. module: crm_poweremail
+#: field:crm.case.rule,pm_template_id:0
+msgid "Poweremail Template"
+msgstr "Plantilla Poweremail"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:105
+#, python-format
+msgid ""
+"You must define a responsible user for this case in order to use this "
+"action!"
+msgstr "S'ha de definir un usuari responsable per aquest cas per poder utilitzar aquesta acció!"
+
+#. module: crm_poweremail
+#: view:crm.case:0
+msgid "History"
+msgstr "Historial"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
+msgid ""
+" Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been updated to the state 'Pending'.\n"
+"\n"
+"Awaiting for review.\n"
+"\n"
+"            "
+msgstr "Estimat/ada ${object.partner_id.name},\n\nEl Cas amb indentificador: #${object.id}; amb l'assumpte: \"${upper(object.name)}\" s'ha actualitzat al estat 'Pendent'.\n\nEsperant una revisió per part del client.\n\n            "
+
+#. module: crm_poweremail
+#: model:ir.module.module,shortdesc:crm_poweremail.module_meta_information
+msgid "CRM Poweremail"
+msgstr "CRM Poweremail"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
+msgid ""
+" Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${upper(object.name)}\" has been CLOSED.\n"
+"\n"
+"            "
+msgstr " Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id}; amb l'assumpte: \"${upper(object.name)}\" s'ha TANCAT.\n\n            "
+
+#. module: crm_poweremail
+#: field:crm.case,conversation_id:0
+msgid "Conversation"
+msgstr "Conversa"
+
+#. module: crm_poweremail
+#: constraint:crm.case.rule:0
+msgid "Error: The mail is not well formated"
+msgstr "Error: El correu no està en un format correcte"
+
+#. module: crm_poweremail
+#: view:crm.case.rule:0
+msgid "PowerEmail Template"
+msgstr "Plantilla PowerEmail"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:102
+#, python-format
+msgid "You must put a Partner eMail to use this action!"
+msgstr "S'ha d'introduïr el correu electrònic de l'Empresa per poder utilitzar aquesta acció"
+
+#. module: crm_poweremail
+#: model:ir.module.module,description:crm_poweremail.module_meta_information
+msgid ""
+"\n"
+"    This module provide :\n"
+"        * Integration between CRM and Poweremail\n"
+"        \n"
+"    NOTE: Needs poweremail with conversations suport.\n"
+"          See: https://github.com/openlabs/poweremail/issues/24\n"
+"    "
+msgstr "\n    Aquest mòdul proveeix :\n        * Integració entre CRM i Poweremail\n        \n    NOTA: Es necessita poweremail amb suport per converses.\n          See: https://github.com/openlabs/poweremail/issues/24\n    "
