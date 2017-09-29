@@ -186,7 +186,8 @@ class CrmCaseRule(osv.osv):
         template_body = pm_template_obj.read(
             cr, uid, action_template, ['def_body_text'])['def_body_text']
         body = template_body or action_body
-        rendered_body = Template(body).render(object=case)
+        rendered_body = Template(body).render(
+            object=case, date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         return rendered_body
 
 
