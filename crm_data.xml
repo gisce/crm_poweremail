@@ -12,7 +12,7 @@
             <field name="use_sign" eval="False"/>
             <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
-            <field name="def_body_text"> Dear ${object.partner_id.name},
+            <field name="def_body_text">Dear ${object.partner_id.name},
 
 In date ${date_now} the case has been Opened with the subject: ${object.name}
 Case Identifier: #${object.id}
@@ -30,7 +30,7 @@ Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
             <field name="use_sign" eval="False"/>
             <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
-            <field name="def_body_text"> Dear ${object.partner_id.name},
+            <field name="def_body_text">Dear ${object.partner_id.name},
 
 The case with identifier: #${object.id} with the subject: "${object.name}" has been updated to the state 'Pending'.
 
@@ -48,9 +48,9 @@ Awaiting for review.
             <field name="use_sign" eval="False"/>
             <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
-            <field name="def_body_text"> Dear ${object.partner_id.name},
+            <field name="def_body_text">Dear ${object.partner_id.name},
 
-The case with identifier: #${object.id} with the subject: "${object.name)}" has been CLOSED.
+The case with identifier: #${object.id} with the subject: "${object.name}" has been CLOSED.
 
             </field>
         </record>
