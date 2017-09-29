@@ -13,12 +13,10 @@
             <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
             <field name="def_body_text"> Dear ${object.partner_id.name},
-${from datetime import datetime}
-In date ${datetime.now().strftime('%d-%m-%Y %H:%M:%S')} the case has been Opened with the subject: ${upper(object.name)}
-Case Identifier: #${object.id}
-Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
 
-            </field>
+In date ${date_now} the case has been Opened with the subject: ${object.name}
+Case Identifier: #${object.id}
+Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}</field>
         </record>
         <record model="poweremail.templates" id="crm_poweremail_case_template_pending">
             <field name="name">Pending Case Template</field>
@@ -34,9 +32,7 @@ Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
 
 The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been updated to the state 'Pending'.
 
-Awaiting for review.
-
-            </field>
+Awaiting for review.</field>
         </record>
         <record model="poweremail.templates" id="crm_poweremail_case_template_close">
             <field name="name">Close Case Template</field>
@@ -50,9 +46,7 @@ Awaiting for review.
             <field name="save_to_drafts" eval="True"/>
             <field name="def_body_text"> Dear ${object.partner_id.name},
 
-The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been CLOSED.
-
-            </field>
+The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been CLOSED.</field>
         </record>
 
         <!-- CRM - Rules -->
