@@ -182,18 +182,16 @@ class CrmCaseRule(osv.osv):
                 template_to = (
                     Template(action.pm_template_id.def_to).render(object=case))
             except:
-                raise osv.except_osv(_('Error!'), ('Poweremail template '
-                                                   '"Email TO" has bad '
-                                                   'formatted address'))
+                raise osv.except_osv(_('Error!'), _(
+                    'Poweremail template "Email TO" has bad formatted address'))
             if template_to:
                 emails.append(template_to)
             try:
                 template_cc = (
                     Template(action.pm_template_id.def_cc).render(object=case))
             except:
-                raise osv.except_osv(_('Error!'), ('Poweremail template '
-                                                   '"Email CC" has bad '
-                                                   'formatted address'))
+                raise osv.except_osv(_('Error!'), _(
+                    'Poweremail template "Email CC" has bad formatted address'))
             if template_cc:
                 emails += template_cc.split(',')
         return emails
