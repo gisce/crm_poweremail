@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from osv import osv
+from tools.translate import _
+
 import qreu
 
 
@@ -59,6 +61,15 @@ class PoweremailMailboxCRM(osv.osv):
                         'partner_id': address.partner_id.id
                     })
                 case_obj.create(cursor, uid, case_vals)
+            else:
+                case_obj.write(cursor, uid, case_id, {
+                    'description': p_mail.pem_body_text
+                })
+                cases = case_obj.browse(cursor, uid, case_id)
+                case_obj._history(
+                    cursor, uid, cases, _('Reply'), history=True,
+                    email=mail.from_.address
+                )
         return res_id
  
 PoweremailMailboxCRM()
