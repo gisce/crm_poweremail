@@ -241,6 +241,8 @@ class CrmCaseRule(osv.osv):
             cr, uid, action_template, ['def_body_text', 'lang'])
         template_body = pm_template['def_body_text']
         template_lang = pm_template['lang'] or False
+        if template_lang:
+            template_lang = Template(template_lang).render(object=case)
         body = template_body or action_body
         body_mako_tpl = Template(
             self.translate_body(cr, uid, src=body, lang=template_lang),
