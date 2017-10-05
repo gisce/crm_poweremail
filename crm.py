@@ -108,13 +108,11 @@ class CrmCase(osv.osv):
                 raise osv.except_osv(_('Error!'),
                         _('Can not send mail with empty body,you should have '
                           'description in the body'))
-        self._history(cursor, uid, cases, _('Send'), history=True, email=False)
         for case in cases:
-            self.write(cursor, uid, [case.id], {
-                'description': False,
+            self.write(cr, uid, [case.id], {
                 'som': False,
                 'canal_id': False,
-                })
+            })
             emails = [case.email_from]
             if case.email_cc:
                 context['email_cc'] = ', '.join(
@@ -128,6 +126,7 @@ class CrmCase(osv.osv):
                 raise osv.except_osv(_('Error!'),
                         _("No E-Mail ID Found for your Company address!"))
             self.email_send(cursor, uid, case, emails, body, context)
+        self._history(cursor, uid, cases, _('Send'), history=True, email=False)
         return True
 
     def _conversation_mails(self, cursor, uid, ids, field_name, args,
