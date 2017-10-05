@@ -193,7 +193,9 @@ class CrmCaseRule(osv.osv):
             if not lang:
                 return src
         res = ir_translation._get_source(
-            cursor, uid, name=src, lang=lang, tt='model')
+            cursor, uid, name='poweremail.templates,def_body_text',
+            lang=lang, tt='model', source=src
+        )
         if not res:
             return src
         return res
