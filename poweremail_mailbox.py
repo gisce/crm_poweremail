@@ -4,9 +4,6 @@ from tools.translate import _
 from talon import quotations
 
 import qreu
-import talon
-
-talon.init()
 
 
 class PoweremailMailboxCRM(osv.osv):
