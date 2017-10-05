@@ -235,11 +235,19 @@ class CrmCaseRule(osv.osv):
         action_template = self.read(
             cr, uid, rule_id, ['pm_template_id'])['pm_template_id'][0]
         pm_template_obj = self.pool.get('poweremail.templates')
-        template_body = pm_template_obj.read(
-            cr, uid, action_template, ['def_body_text'])['def_body_text']
+        pm_template = pm_template_obj.read(
+            cr, uid, action_template, ['def_body_text', 'lang'])
+        template_body = pm_template['def_body_text']
+        template_lang = pm_template['lang'] or False
         body = template_body or action_body
-        rendered_body = Template(body).render(
-            object=case, date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        body_mako_tpl = Template(
+            self.translate_body(cr, uid, src=body, lang=template_lang),
+            input_encoding='utf-8',
+        )
+        rendered_body = body_mako_tpl.render(
+            object=case,
+            date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        )
         return rendered_body
 
 
