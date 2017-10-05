@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GISCE-ERP\n"
 "Report-Msgid-Bugs-To: https://github.com/gisce/erp/issues\n"
-"POT-Creation-Date: 2017-09-29 13:38\n"
-"PO-Revision-Date: 2017-09-29 11:47+0000\n"
+"POT-Creation-Date: 2017-10-05 10:02\n"
+"PO-Revision-Date: 2017-10-05 08:12+0000\n"
 "Last-Translator: Jaume  Florez Valenzuela <jflorez@gisce.net>\n"
 "Language-Team: Catalan (Spain) <erp@dev.gisce.net>\n"
 "MIME-Version: 1.0\n"
@@ -16,18 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Language: ca_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-#. module: crm_poweremail
-#: field:crm.case.rule,pm_template_id:0
-msgid "Poweremail Template"
-msgstr "Plantilla Poweremail"
-
-#. module: crm_poweremail
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_open
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_pending
-msgid "${object.name}"
-msgstr "${object.name}"
 
 #. module: crm_poweremail
 #: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
@@ -42,16 +30,15 @@ msgid ""
 msgstr "Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha actualitzat al estat 'Pending'.\n\nEsperant la revisió.\n\n            "
 
 #. module: crm_poweremail
-#: field:crm.case,conversation_mails:0
-msgid "unknown"
-msgstr "desconegut"
+#: field:crm.case.rule,pm_template_id:0
+msgid "Poweremail Template"
+msgstr "Plantilla Poweremail"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:109
+#: code:addons/crm_poweremail/crm.py:220
 #, python-format
-msgid ""
-"Can not send mail with empty body,you should have description in the body"
-msgstr "No es pot enviar un correu amb el cos buit, hauria d'haver una descripció en el cos del missatge"
+msgid "Poweremail template \"Email CC\" has bad formatted address"
+msgstr "La direcció \"CC\" de la plantilla Power E-mail no té un format correcte"
 
 #. module: crm_poweremail
 #: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
@@ -63,7 +50,24 @@ msgid ""
 "Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
 "\n"
 "            "
-msgstr "Estimat/ada ${object.partner_id.name},\n\nEn data ${date_now} s'ha Obert un cas amb l'assumpte: ${object.name}\nIdentificador del cas: #${object.id}\nResponsable: ${object.user_id.name} - ${object.user_id.address_id.email}\n\n            "
+msgstr "Estimat/ada ${object.partner_id.name},\n\nEn data ${date_now} s'ha Obert un cas amb l'assumpte: ${object.name}\n\nIdentificador del cas: #${object.id}\nResponsable: ${object.user_id.name} - ${object.user_id.address_id.email}\n\n            "
+
+#. module: crm_poweremail
+#: view:crm.case:0
+msgid "Conversations"
+msgstr "Converses"
+
+#. module: crm_poweremail
+#: field:crm.case,conversation_mails:0
+msgid "unknown"
+msgstr "desconegut"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:109
+#, python-format
+msgid ""
+"Can not send mail with empty body,you should have description in the body"
+msgstr "No es pot enviar un correu amb el cos buit, hauria d'haver una descripció en el cos del missatge"
 
 #. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:129
@@ -77,14 +81,31 @@ msgid "Invalid XML for View Architecture!"
 msgstr "Arquitectura del XML invàlida!"
 
 #. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:212
+#, python-format
+msgid "Poweremail template \"Email TO\" has bad formatted address"
+msgstr "La direcció \"TO\" de la plantilla Power E-mail no té un format correcte"
+
+#. module: crm_poweremail
 #: view:crm.case.rule:0
 msgid "E-Mail Actions"
 msgstr "Accions de correu electrònic"
 
 #. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
+msgid ""
+"Dear ${object.partner_id.name},\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
+"\n"
+"            "
+msgstr "Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha TANCAT.\n\n            "
+
+#. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:60 code:addons/crm_poweremail/crm.py:67
 #: code:addons/crm_poweremail/crm.py:101 code:addons/crm_poweremail/crm.py:104
 #: code:addons/crm_poweremail/crm.py:108 code:addons/crm_poweremail/crm.py:128
+#: code:addons/crm_poweremail/crm.py:212 code:addons/crm_poweremail/crm.py:220
 #, python-format
 msgid "Error!"
 msgstr "Error!"
@@ -130,11 +151,6 @@ msgid "CRM Poweremail"
 msgstr "CRM Poweremail"
 
 #. module: crm_poweremail
-#: view:crm.case:0
-msgid "Conversations"
-msgstr "Converses"
-
-#. module: crm_poweremail
 #: field:crm.case,conversation_id:0
 msgid "Conversation"
 msgstr "Conversa"
@@ -156,6 +172,13 @@ msgid "You must put a Partner eMail to use this action!"
 msgstr "S'ha d'introduïr el correu electrònic de l'Empresa per poder utilitzar aquesta acció"
 
 #. module: crm_poweremail
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_open
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_pending
+msgid "${object.name}"
+msgstr "${object.name}"
+
+#. module: crm_poweremail
 #: model:ir.module.module,description:crm_poweremail.module_meta_information
 msgid ""
 "\n"
@@ -166,13 +189,3 @@ msgid ""
 "          See: https://github.com/openlabs/poweremail/issues/24\n"
 "    "
 msgstr "\n    Aquest mòdul proveeix :\n        * Integració entre CRM i Poweremail\n        \n    NOTA: Es necessita poweremail amb suport per converses.\n          See: https://github.com/openlabs/poweremail/issues/24\n    "
-
-#. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
-msgid ""
-"Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
-"\n"
-"            "
-msgstr "Estimat/ada ${object.partner_id.name},\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha TANCAT.\n\n            "
