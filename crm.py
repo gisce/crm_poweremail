@@ -185,7 +185,7 @@ class CrmCaseRule(osv.osv):
         """
         ir_translation = self.pool.get('ir.translation')
         if not lang:
-            usr_obj = self.pool.get('res_users')
+            usr_obj = self.pool.get('res.users')
             usr_lang = usr_obj.read(cursor, uid, uid, ['context_lang'])
             if not usr_lang:
                 return src
