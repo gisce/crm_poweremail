@@ -109,7 +109,7 @@ class CrmCase(osv.osv):
                         _('Can not send mail with empty body,you should have '
                           'description in the body'))
         for case in cases:
-            self.write(cr, uid, [case.id], {
+            self.write(cursor, uid, [case.id], {
                 'som': False,
                 'canal_id': False,
             })
