@@ -65,8 +65,6 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
             <field name="pm_template_id" ref="crm_poweremail_case_template_open"/>
             <field name="act_mail_to_user" eval="True"/>
             <field name="act_mail_to_partner" eval="True"/>
-            <field name="act_mail_to_watchers" eval="True"/>
-            <field name="act_mail_to_email" eval="True"/>
         </record>
 
         <record model="crm.case.rule" id="crm_poweremail_rule_pending">
@@ -77,8 +75,6 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
             <field name="pm_template_id" ref="crm_poweremail_case_template_pending"/>
             <field name="act_mail_to_user" eval="True"/>
             <field name="act_mail_to_partner" eval="True"/>
-            <field name="act_mail_to_watchers" eval="True"/>
-            <field name="act_mail_to_email" eval="True"/>
         </record>
 
         <record model="crm.case.rule" id="crm_poweremail_rule_close">
@@ -89,8 +85,6 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
             <field name="pm_template_id" ref="crm_poweremail_case_template_close"/>
             <field name="act_mail_to_user" eval="True"/>
             <field name="act_mail_to_partner" eval="True"/>
-            <field name="act_mail_to_watchers" eval="True"/>
-            <field name="act_mail_to_email" eval="True"/>
         </record>
     </data>
 </openerp>
