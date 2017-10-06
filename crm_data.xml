@@ -25,8 +25,9 @@ Waiting for a responsible to take over the case.
         <record model="poweremail.templates" id="crm_poweremail_case_template_open">
             <field name="name">Open Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
-            <field name="def_to">${object.user_id.address_id.email}</field>
+            <field name="def_to">${object.email_from}</field>
             <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
             <field name="def_subject" >${object.name}</field>
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
@@ -43,8 +44,9 @@ Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
         <record model="poweremail.templates" id="crm_poweremail_case_template_pending">
             <field name="name">Pending Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
-            <field name="def_to">${object.user_id.address_id.email}</field>
+            <field name="def_to">${object.email_from}</field>
             <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
             <field name="def_subject" >${object.name}</field>
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
@@ -61,8 +63,9 @@ Awaiting for review.
         <record model="poweremail.templates" id="crm_poweremail_case_template_close">
             <field name="name">Close Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
-            <field name="def_to">${object.user_id.address_id.email}</field>
+            <field name="def_to">${object.email_from}</field>
             <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
             <field name="def_subject" >${object.name}</field>
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
