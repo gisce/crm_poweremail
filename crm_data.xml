@@ -2,6 +2,25 @@
 <openerp>
     <data>
         <!-- CRM Poweremail - Templates -->
+        <record model="poweremail.templates" id="crm_poweremail_case_template_new">
+            <field name="name">New Case Template</field>
+            <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
+            <field name="def_to">${object.email_from}</field>
+            <field name="def_cc">${object.email_cc}</field>
+            <field name="def_subject" >${object.name}</field>
+            <field name="template_language">mako</field>
+            <field name="use_sign" eval="False"/>
+            <field name="lang" eval="False"/>
+            <field name="save_to_drafts" eval="True"/>
+            <field name="def_body_text">Dear ${object.partner_id.name},
+
+In date ${date_now} we have recieved the case with the subject: ${object.name}
+Case Identifier: #${object.id}
+
+Waiting for a responsible to take over the case.
+
+            </field>
+        </record>
         <record model="poweremail.templates" id="crm_poweremail_case_template_open">
             <field name="name">Open Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
