@@ -206,32 +206,32 @@ class CrmCaseRule(osv.osv):
             cr, uid, rule_id, case, context)
         action = self.pool.get('crm.case.rule').browse(cr, uid, rule_id)
         if action.pm_template_id:
-            try:
-                template_to = (
-                    Template(action.pm_template_id.def_to).render(object=case))
-            except:
-                raise osv.except_osv(_('Error!'), _(
-                    'Poweremail template "Email TO" has bad formatted address'))
-            if template_to:
+            if action.pm_template_id.def_to:
+                try:
+                    template_to = (
+                        Template(action.pm_template_id.def_to).render(object=case))
+                except:
+                    raise osv.except_osv(_('Error!'), _(
+                        'Poweremail template "Email TO" has bad formatted address'))
                 emails.append(template_to)
-            try:
-                template_cc = (
-                    Template(action.pm_template_id.def_cc).render(object=case))
-            except:
-                raise osv.except_osv(_('Error!'), _(
-                    'Poweremail template "Email CC" has bad formatted address'))
-            if template_cc:
+            if action.pm_template_id.def_cc:
+                try:
+                    template_cc = (
+                        Template(action.pm_template_id.def_cc).render(object=case))
+                except:
+                    raise osv.except_osv(_('Error!'), _(
+                        'Poweremail template "Email CC" has bad formatted address'))
                 emails += template_cc.split(',')
-            try:
-                template_bcc = (
-                    Template(action.pm_template_id.def_bcc).render(object=case))
-            except:
-                raise osv.except_osv(_('Error!'), _(
-                    'Poweremail template "Email BCC" has bad formatted'
-                    ' address'))
-            if template_bcc:
+            if action.pm_template_id.def_bcc:
+                try:
+                    template_bcc = (
+                        Template(action.pm_template_id.def_bcc).render(object=case))
+                except:
+                    raise osv.except_osv(_('Error!'), _(
+                        'Poweremail template "Email BCC" has bad formatted address'))
                 emails += template_bcc.split(',')
-        return emails
+
+        return list(set(emails))
 
     def get_email_body(self, cr, uid, rule_id, case, context=None):
         if not context:
