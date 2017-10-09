@@ -67,6 +67,8 @@ class CrmCase(osv.osv):
             raise osv.except_osv(_('Error!'),
                     _("No E-Mail ID Found in Power Email for this section or "
                       "missing reply address in section."))
+        email_cc = context.get('email_cc', [])
+        email_cc.append(reply_to)
         # TODO: Improve reply-to finding in conversation
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
@@ -78,7 +80,7 @@ class CrmCase(osv.osv):
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
             'conversation_id': case.conversation_id.id,
-            'pem_cc': context.get('email_cc', False)
+            'pem_cc': ', '.join(set(email_cc))
         })
         return True
 
