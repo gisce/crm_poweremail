@@ -84,7 +84,8 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
             <field name="active">True</field>
             <field name="trg_state_from">draft</field>
             <field name="trg_date_type">create</field>
-            <field name="trg_max_history" eval="1"/>
+            <field name="trg_max_history" eval="0"/>
+            <field name="trg_limit_history" eval="1"/>
             <field name="pm_template_id" ref="crm_poweremail_case_template_new"/>
         </record>
 
