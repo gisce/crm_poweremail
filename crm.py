@@ -223,7 +223,9 @@ class CrmCaseRule(osv.osv):
                 except:
                     raise osv.except_osv(_('Error!'), _(
                         'Poweremail template "Email CC" has bad formatted address'))
-                emails += template_cc.split(',')
+                context.update({
+                    'email_cc': list(set(template_cc.split(',')))
+                })
             if action.pm_template_id.def_bcc:
                 try:
                     template_bcc = (
@@ -231,7 +233,9 @@ class CrmCaseRule(osv.osv):
                 except:
                     raise osv.except_osv(_('Error!'), _(
                         'Poweremail template "Email BCC" has bad formatted address'))
-                emails += template_bcc.split(',')
+                context.update({
+                    'email_bcc': list(set(template_bcc.split(',')))
+                })
 
         return list(set(emails))
 
