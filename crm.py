@@ -251,17 +251,25 @@ class CrmCaseRule(osv.osv):
         action_template = self.read(
             cr, uid, rule_id, ['pm_template_id'])['pm_template_id'][0]
         pm_template_obj = self.pool.get('poweremail.templates')
-        pm_template = pm_template_obj.read(
-            cr, uid, action_template, ['def_body_text', 'lang'])
-        template_body = pm_template['def_body_text']
-        template_lang = pm_template['lang'] or False
-        if template_lang:
-            template_lang = Template(template_lang).render(object=case)
+        pm_template = pm_template_obj.browse(cr, uid, action_template)
+        pm_send_wizard_obj = self.pool.get('poweremail.send.wizard')
+        ctx = context.copy()
+        lang = pm_send_wizard_obj.get_value(
+            cr, uid, pm_template, pm_template.lang, context, id=case.id)
+        if not lang:
+            lang = (
+                case.partner_id.lang if case.partner_id and case.partner_id.lang
+                else (case.user_id.context_lang
+                      if case.user_id and case.user_id.context_lang
+                      else False
+                )
+            )
+        if lang:
+            ctx['lang'] = lang
+        template_body = pm_template_obj.read(
+            cr, uid, action_template, ['def_body_text'], ctx)['def_body_text']
         body = template_body or action_body
-        body_mako_tpl = Template(
-            self.translate_body(cr, uid, src=body, lang=template_lang),
-            input_encoding='utf-8',
-        )
+        body_mako_tpl = Template(body, input_encoding='utf-8')
         rendered_body = body_mako_tpl.render(
             object=case,
             date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
