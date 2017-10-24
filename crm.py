@@ -171,36 +171,7 @@ class CrmCaseRule(osv.osv):
         'pm_template_id': fields.many2one(
             'poweremail.templates', 'Poweremail Template', ondelete='restrict')
     }
-
-    def translate_body(self, cursor, uid, src, lang=False):
-        """Translate String.
-        :param cursor:      OpenERP Cursor
-        :param uid:     OpenERP User ID
-        :param src:     Source text to translate (aka email_body_text)
-        :type src: str
-        :param lang:    Target language of the translation
-        :type lang: str
-        :return:        Source text on "src" translated to language on "lang"
-                            If no language specified, using user's one
-        :rtype: str
-        """
-        ir_translation = self.pool.get('ir.translation')
-        if not lang:
-            usr_obj = self.pool.get('res.users')
-            usr_lang = usr_obj.read(cursor, uid, uid, ['context_lang'])
-            if not usr_lang:
-                return src
-            lang = usr_lang['context_lang']
-            if not lang:
-                return src
-        res = ir_translation._get_source(
-            cursor, uid, name='poweremail.templates,def_body_text',
-            lang=lang, tt='model', source=src
-        )
-        if not res:
-            return src
-        return res
-
+    
     def get_email_addresses(self, cr, uid, rule_id, case, context):
         if isinstance(rule_id, list):
             rule_id = rule_id[0]
