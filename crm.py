@@ -67,6 +67,8 @@ class CrmCase(osv.osv):
             raise osv.except_osv(_('Error!'),
                     _("No E-Mail ID Found in Power Email for this section or "
                       "missing reply address in section."))
+        email_cc = context.get('email_cc', [])
+        email_cc.append(reply_to)
         # TODO: Improve reply-to finding in conversation
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
@@ -78,7 +80,7 @@ class CrmCase(osv.osv):
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
             'conversation_id': case.conversation_id.id,
-            'pem_cc': context.get('email_cc', False)
+            'pem_cc': ', '.join(set(email_cc))
         })
         return True
 
@@ -108,13 +110,11 @@ class CrmCase(osv.osv):
                 raise osv.except_osv(_('Error!'),
                         _('Can not send mail with empty body,you should have '
                           'description in the body'))
-        self._history(cursor, uid, cases, _('Send'), history=True, email=False)
         for case in cases:
             self.write(cursor, uid, [case.id], {
-                'description': False,
                 'som': False,
                 'canal_id': False,
-                })
+            })
             emails = [case.email_from]
             if case.email_cc:
                 context['email_cc'] = ', '.join(
@@ -128,6 +128,7 @@ class CrmCase(osv.osv):
                 raise osv.except_osv(_('Error!'),
                         _("No E-Mail ID Found for your Company address!"))
             self.email_send(cursor, uid, case, emails, body, context)
+        self._history(cursor, uid, cases, _('Send'), history=True, email=False)
         return True
 
     def _conversation_mails(self, cursor, uid, ids, field_name, args,
@@ -170,6 +171,44 @@ class CrmCaseRule(osv.osv):
         'pm_template_id': fields.many2one(
             'poweremail.templates', 'Poweremail Template', ondelete='restrict')
     }
+    
+    def get_email_addresses(self, cr, uid, rule_id, case, context):
+        if isinstance(rule_id, list):
+            rule_id = rule_id[0]
+        emails = super(CrmCaseRule, self).get_email_addresses(
+            cr, uid, rule_id, case, context)
+        action = self.pool.get('crm.case.rule').browse(cr, uid, rule_id)
+        if action.pm_template_id:
+            if action.pm_template_id.def_to:
+                try:
+                    template_to = (
+                        Template(action.pm_template_id.def_to).render(object=case))
+                except:
+                    raise osv.except_osv(_('Error!'), _(
+                        'Poweremail template "Email TO" has bad formatted address'))
+                emails.append(template_to)
+            if action.pm_template_id.def_cc:
+                try:
+                    template_cc = (
+                        Template(action.pm_template_id.def_cc).render(object=case))
+                except:
+                    raise osv.except_osv(_('Error!'), _(
+                        'Poweremail template "Email CC" has bad formatted address'))
+                context.update({
+                    'email_cc': list(set(template_cc.split(',')))
+                })
+            if action.pm_template_id.def_bcc:
+                try:
+                    template_bcc = (
+                        Template(action.pm_template_id.def_bcc).render(object=case))
+                except:
+                    raise osv.except_osv(_('Error!'), _(
+                        'Poweremail template "Email BCC" has bad formatted address'))
+                context.update({
+                    'email_bcc': list(set(template_bcc.split(',')))
+                })
+
+        return list(set(emails))
 
     def get_email_body(self, cr, uid, rule_id, case, context=None):
         if not context:
@@ -183,11 +222,29 @@ class CrmCaseRule(osv.osv):
         action_template = self.read(
             cr, uid, rule_id, ['pm_template_id'])['pm_template_id'][0]
         pm_template_obj = self.pool.get('poweremail.templates')
+        pm_template = pm_template_obj.browse(cr, uid, action_template)
+        pm_send_wizard_obj = self.pool.get('poweremail.send.wizard')
+        ctx = context.copy()
+        lang = pm_send_wizard_obj.get_value(
+            cr, uid, pm_template, pm_template.lang, context, id=case.id)
+        if not lang:
+            lang = (
+                case.partner_id.lang if case.partner_id and case.partner_id.lang
+                else (case.user_id.context_lang
+                      if case.user_id and case.user_id.context_lang
+                      else False
+                )
+            )
+        if lang:
+            ctx['lang'] = lang
         template_body = pm_template_obj.read(
-            cr, uid, action_template, ['def_body_text'])['def_body_text']
+            cr, uid, action_template, ['def_body_text'], ctx)['def_body_text']
         body = template_body or action_body
-        rendered_body = Template(body).render(
-            object=case, date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        body_mako_tpl = Template(body, input_encoding='utf-8')
+        rendered_body = body_mako_tpl.render(
+            object=case,
+            date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        )
         return rendered_body
 
 

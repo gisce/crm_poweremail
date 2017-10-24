@@ -2,54 +2,92 @@
 <openerp>
     <data>
         <!-- CRM Poweremail - Templates -->
-        <record model="poweremail.templates" id="crm_poweremail_case_template_open">
-            <field name="name">Open Case Template</field>
+        <record model="poweremail.templates" id="crm_poweremail_case_template_new">
+            <field name="name">New Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
-            <field name="def_to">${object.user_id.address_id.email}</field>
+            <field name="def_to">${object.email_from}</field>
             <field name="def_cc">${object.email_cc}</field>
             <field name="def_subject" >${object.name}</field>
+            <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
             <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
-            <field name="def_body_text"> Dear ${object.partner_id.name},
+            <field name="def_body_text">Dear ${object.partner_id.name},
+
+In date ${date_now} we have recieved the case with the subject: ${object.name}
+Case Identifier: #${object.id}
+
+Waiting for a responsible to take over the case.
+
+            </field>
+        </record>
+        <record model="poweremail.templates" id="crm_poweremail_case_template_open">
+            <field name="name">Open Case Template</field>
+            <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
+            <field name="def_to">${object.email_from}</field>
+            <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
+            <field name="def_subject" >${object.name}</field>
+            <field name="lang" >${object.partner_id.lang}</field>
+            <field name="template_language">mako</field>
+            <field name="use_sign" eval="False"/>
+            <field name="save_to_drafts" eval="True"/>
+            <field name="def_body_text">Dear ${object.partner_id.name},
 
 In date ${date_now} the case has been Opened with the subject: ${object.name}
 Case Identifier: #${object.id}
-Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}</field>
+Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
+
+            </field>
         </record>
         <record model="poweremail.templates" id="crm_poweremail_case_template_pending">
             <field name="name">Pending Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
-            <field name="def_to">${object.user_id.address_id.email}</field>
+            <field name="def_to">${object.email_from}</field>
             <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
             <field name="def_subject" >${object.name}</field>
+            <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
-            <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
-            <field name="def_body_text"> Dear ${object.partner_id.name},
+            <field name="def_body_text">Dear ${object.partner_id.name},
 
-The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been updated to the state 'Pending'.
+The case with identifier: #${object.id} with the subject: "${object.name}" has been updated to the state 'Pending'.
 
-Awaiting for review.</field>
+Awaiting for review.
+
+            </field>
         </record>
         <record model="poweremail.templates" id="crm_poweremail_case_template_close">
             <field name="name">Close Case Template</field>
             <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
-            <field name="def_to">${object.user_id.address_id.email}</field>
+            <field name="def_to">${object.email_from}</field>
             <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
             <field name="def_subject" >${object.name}</field>
+            <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
-            <field name="lang" eval="False"/>
             <field name="save_to_drafts" eval="True"/>
-            <field name="def_body_text"> Dear ${object.partner_id.name},
+            <field name="def_body_text">Dear ${object.partner_id.name},
 
-The case with identifier: #${object.id} with the subject: "${upper(object.name)}" has been CLOSED.</field>
+The case with identifier: #${object.id} with the subject: "${object.name}" has been CLOSED.
+
+            </field>
         </record>
 
         <!-- CRM - Rules -->
+        <record model="crm.case.rule" id="crm_poweremail_rule_new">
+            <field name="name">Poweremail New Case</field>
+            <field name="active">True</field>
+            <field name="trg_state_from">draft</field>
+            <field name="trg_date_type">create</field>
+            <field name="trg_max_history" eval="0"/>
+            <field name="trg_limit_history" eval="1"/>
+            <field name="pm_template_id" ref="crm_poweremail_case_template_new"/>
+        </record>
 
         <record model="crm.case.rule" id="crm_poweremail_rule_open">
             <field name="name">Poweremail Open Case</field>
@@ -57,22 +95,28 @@ The case with identifier: #${object.id} with the subject: "${upper(object.name)}
             <field name="trg_state_from">draft</field>
             <field name="trg_state_to">open</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_open"/>
+            <field name="act_mail_to_user" eval="True"/>
+            <field name="act_mail_to_partner" eval="True"/>
         </record>
 
         <record model="crm.case.rule" id="crm_poweremail_rule_pending">
-            <field name="name">Poweremail Open Case</field>
+            <field name="name">Poweremail Pending Case</field>
             <field name="active">True</field>
             <field name="trg_state_from">open</field>
             <field name="trg_state_to">pending</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_pending"/>
+            <field name="act_mail_to_user" eval="True"/>
+            <field name="act_mail_to_partner" eval="True"/>
         </record>
 
         <record model="crm.case.rule" id="crm_poweremail_rule_close">
-            <field name="name">Poweremail Open Case</field>
+            <field name="name">Poweremail Close Case</field>
             <field name="active">True</field>
             <field name="trg_state_from">pending</field>
             <field name="trg_state_to">done</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_close"/>
+            <field name="act_mail_to_user" eval="True"/>
+            <field name="act_mail_to_partner" eval="True"/>
         </record>
     </data>
 </openerp>

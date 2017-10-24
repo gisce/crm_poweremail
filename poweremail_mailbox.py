@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from osv import osv
+from tools.translate import _
+from talon import quotations
+
 import qreu
 
 
@@ -33,6 +36,7 @@ class PoweremailMailboxCRM(osv.osv):
             # p_mail.complete_mail()
             # Fuck re-browse to get the content
             p_mail = self.browse(cursor, uid, res_id, context=context)
+            body_text = quotations.extract_from_plain(p_mail.pem_body_text)
             section_id = section_id[0]
             case_id = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
@@ -47,7 +51,7 @@ class PoweremailMailboxCRM(osv.osv):
                     'conversation_id': p_mail.conversation_id.id,
                     'name': p_mail.pem_subject,
                     'section_id': section_id,
-                    'description': p_mail.pem_body_text,
+                    'description': body_text,
                     'email_from': p_mail.pem_from,
                     'email_cc': p_mail.pem_cc,
                     'user_id': section.user_id and section.user_id.id,
@@ -59,6 +63,15 @@ class PoweremailMailboxCRM(osv.osv):
                         'partner_id': address.partner_id.id
                     })
                 case_obj.create(cursor, uid, case_vals)
+            else:
+                case_obj.write(cursor, uid, case_id, {
+                    'description': body_text
+                })
+                cases = case_obj.browse(cursor, uid, case_id)
+                case_obj._history(
+                    cursor, uid, cases, _('Reply'), history=True,
+                    email=mail.from_.address
+                )
         return res_id
  
 PoweremailMailboxCRM()
