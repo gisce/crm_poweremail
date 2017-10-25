@@ -2,6 +2,8 @@
 from osv import osv
 from tools.translate import _
 from talon import quotations
+from datetime import datetime
+from email.utils import make_msgid
 
 import qreu
 
@@ -180,16 +182,22 @@ class PoweremailMailboxCRM(osv.osv):
                 if email_to:
                     email_to = list(set(email_to))
                     mailbox_obj = self.pool.get('poweremail.mailbox')
-                    vals2 = vals.copy()
-                    vals2.update({
+                    vals_forward = {}
+                    vals_forward.update({
                         'pem_to': email_to[0],
                         'pem_from': email_from,
                         'pem_cc': email_to[1:] if len(email_to[1:]) else False,
-                        'pem_bcc': False,
+                        'pem_subject': p_mail.pem_subject,
+                        'pem_body_text': p_mail.pem_body_text,
+                        'pem_body_html': p_mail.pem_body_html,
                         'pem_folder': 'outbox',
-                        'mail_type': 'multipart/alternative'
+                        'pem_account_id': p_mail.pem_account_id.id,
+                        'mail_type': 'multipart/alternative',
+                        'date_mail': datetime.now().strftime('%Y-%m-%d'),
+                        'pem_message_id': make_msgid('tinycrm-%s' % case.id),
+                        'conversation_id': case.conversation_id.id,
                     })
-                    mailbox_obj.create(cursor, uid, vals2)
+                    mailbox_obj.create(cursor, uid, vals_forward)
         return res_id
  
 PoweremailMailboxCRM()
