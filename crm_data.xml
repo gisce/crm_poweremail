@@ -12,7 +12,7 @@
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
             <field name="lang" eval="False"/>
-            <field name="def_body_text">Dear ${object.partner_id.name},
+            <field name="def_body_text">Hi there,
 
 In date ${date_now} we have recieved the case with the subject: ${object.name}
 Case Identifier: #${object.id}
@@ -31,11 +31,12 @@ Waiting for a responsible to take over the case.
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
-            <field name="def_body_text">Dear ${object.partner_id.name},
+            <field name="def_body_text">Hi there,
 
 In date ${date_now} the case has been Opened with the subject: ${object.name}
 Case Identifier: #${object.id}
-Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
+
+Responsible: ${object.user_id.name} &lt;${object.user_id.address_id.email}&gt;
 
             </field>
         </record>
@@ -49,7 +50,7 @@ Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
-            <field name="def_body_text">Dear ${object.partner_id.name},
+            <field name="def_body_text">Hi there,
 
 The case with identifier: #${object.id} with the subject: "${object.name}" has been updated to the state 'Pending'.
 
@@ -67,7 +68,7 @@ Awaiting for review.
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
-            <field name="def_body_text">Dear ${object.partner_id.name},
+            <field name="def_body_text">Hi there,
 
 The case with identifier: #${object.id} with the subject: "${object.name}" has been CLOSED.
 
