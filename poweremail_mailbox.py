@@ -65,6 +65,7 @@ class PoweremailMailboxCRM(osv.osv):
                     address_id = addr_id[0]
                     partner_id = address['partner_id'][0]
                 else:
+                    partner_obj = self.pool.get('res.partner')
                     address_email = mail.from_.address
                     address_name = mail.from_.display_name or address_email
                     new_address = add_obj.create(cursor, uid, {
@@ -72,7 +73,18 @@ class PoweremailMailboxCRM(osv.osv):
                         'email': address_email
                     })
                     address_id = new_address.id
-                    partner_id = new_address.partner_id or False
+                    domain = address_email.split('@')[-1]
+                    partner_id = partner_obj.search(
+                        cursor, uid, [
+                            ('domain', '=', domain)
+                        ]
+                    )
+                    if partner_id:
+                        add_obj.write(
+                            cursor, uid, address_id, {'partner_id': partner_id}
+                        )
+                    else:
+                        partner_id = False
 
                 case_vals.update({
                     'partner_address_id': address_id,
