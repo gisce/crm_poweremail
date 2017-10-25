@@ -34,7 +34,7 @@ class PoweremailMailboxCRM(osv.osv):
         if section_id:
             # Trying to get mail for new email, fails cause no mail on server
             # p_mail.complete_mail()
-            # Fuck re-browse to get the content
+            # Re-browse to get the content
             p_mail = self.browse(cursor, uid, res_id, context=context)
             body_text = quotations.extract_from_plain(p_mail.pem_body_text)
             section_id = section_id[0]
@@ -42,6 +42,7 @@ class PoweremailMailboxCRM(osv.osv):
                 ('conversation_id', '=', p_mail.conversation_id.id)
             ])
             if not case_id:
+                # If not found a conversation, add new case with email values
                 add_obj = self.pool.get('res.partner.address')
                 addr_id = add_obj.search(cursor, uid, [
                     ('email', '=', qreu.address.parse(p_mail.pem_from).address)
@@ -57,11 +58,26 @@ class PoweremailMailboxCRM(osv.osv):
                     'user_id': section.user_id and section.user_id.id,
                 }
                 if addr_id:
-                    address = add_obj.browse(cursor, uid, addr_id[0])
-                    case_vals.update({
-                        'partner_address_id': address.id,
-                        'partner_id': address.partner_id.id
+                    # If partner address found get address and partner id
+                    address = add_obj.read(
+                        cursor, uid, addr_id[0], ['partner_id']
+                    )
+                    address_id = addr_id[0]
+                    partner_id = address['partner_id'][0]
+                else:
+                    address_email = mail.from_.address
+                    address_name = mail.from_.display_name or address_email
+                    new_address = add_obj.create(cursor, uid, {
+                        'name': address_name,
+                        'email': address_email
                     })
+                    address_id = new_address.id
+                    partner_id = new_address.partner_id or False
+
+                case_vals.update({
+                    'partner_address_id': address_id,
+                    'partner_id': partner_id
+                })
                 case_obj.create(cursor, uid, case_vals)
             else:
                 case_id = case_id[0]
@@ -82,6 +98,7 @@ class PoweremailMailboxCRM(osv.osv):
                     cursor, uid, cases, _('Reply'), history=True,
                     email=mail.from_.address
                 )
+
         return res_id
  
 PoweremailMailboxCRM()
