@@ -53,6 +53,41 @@ class PoweremailMailboxCRM(osv.osv):
                 )
         return address_obj.browse(cursor, uid, address_id)
 
+    def create_case_from_mail(self, cursor, uid, p_mail, section,
+                              body_text=False, context=None):
+        """
+        Creates a CRM.case object from a poweremail.mailbox object
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :param p_mail:      PowerEmail Mailbox object
+        :param section:     CRM.case.section that the new case must belong
+        :param body_text:   Mail body parsed, used in the CRM.case.description
+        :param context:     OpenERP Context, passed to the create method
+        :return: 
+        """
+        if context is None:
+            context = {}
+        case_obj = self.pool.get('crm.case')
+
+        case_vals = {
+            'conversation_id': p_mail.conversation_id.id,
+            'name': p_mail.pem_subject,
+            'section_id': section.id,
+            'description': body_text,
+            'email_from': p_mail.pem_from,
+            'email_cc': p_mail.pem_cc,
+            'user_id': section.user_id and section.user_id.id,
+        }
+        address = self.get_address_from_powermail_mailbox(
+            cursor, uid, p_mail
+        )
+        if address:
+            case_vals.update({
+                'partner_address_id': address.id,
+                'partner_id': address.partner_id
+            })
+        return case_obj.create(cursor, uid, case_vals, context)
+
     def create(self, cursor, uid, vals, context=None):
         """If some crm section reply_to has this pem_account create a CRM Case.
         """
