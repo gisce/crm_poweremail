@@ -12,25 +12,30 @@ class PoweremailMailboxCRM(osv.osv):
     _name = 'poweremail.mailbox'
     _inherit = 'poweremail.mailbox'
 
-    def get_address_from_powermail_mailbox(self, cursor, uid, p_mail):
+    def get_partner_address(self, cursor, uid, p_mail_id):
         """
         Gets or Creates the 'res.partner.address' from a poweremail_mailbox
-        :param cursor:  OpenERP Cursor
-        :param uid:     OpenERP User ID
-        :param p_mail:  PowerEmail Mailbox object (browsed)
-        :return:        Res.Partner.Address (browsed)
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :param p_mail_id:   PowerEmail Mailbox object ID
+        :return:            Res.Partner.Address (browsed)
         """
         address_obj = self.pool.get('res.partner.address')
         partner_obj = self.pool.get('res.partner')
-        mail = qreu.Email(p_mail.pem_mail_orig)
+        p_mail = self.pool.get('poweremail.mailbox').read(
+            cursor, uid, p_mail_id, ['pem_mail_orig', 'pem_from']
+        )
+        mail = qreu.Email(p_mail['pem_mail_orig'])
         try:
             address_id = address_obj.search(cursor, uid, [
-                ('email', '=', qreu.address.parse(p_mail.pem_from).address)
+                ('email', '=', qreu.address.parse(p_mail['pem_from']).address)
             ])
         except Exception as err:
             import logging
             logging.getLogger('poweremail.mailbox').error(
-                'Could not parse poweremail_mailbox from address with qreu')
+                _('Could not parse poweremail_mailbox '
+                  'pem_from address with qreu')
+            )
             return False
         if not address_id:
             # If not found: create partner address
