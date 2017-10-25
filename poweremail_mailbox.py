@@ -158,12 +158,38 @@ class PoweremailMailboxCRM(osv.osv):
                 case_obj.write(cursor, uid, case_id, {
                     'description': body_text
                 })
+                # Re-browse after write
                 cases = case_obj.browse(cursor, uid, [case_id])
                 case_obj._history(
                     cursor, uid, cases, _('Reply'), history=True,
                     email=mail.from_.address
                 )
-
+                case = cases[0]
+                # After crm.case update,
+                # Forward the e-mail to case TO, FROM, CCs or BCCs
+                # if not in e-mail recipients
+                email_from = section.reply_to
+                email_to = []
+                if case.email_from not in mail.to.addresses:
+                    email_to.append(case.email_from)
+                if case.partner_address_id.email not in mail.to.addresses:
+                    email_to.append(case.partner_address_id.email)
+                for cc_email in case.email_cc:
+                    if not cc_email in mail.to.addresses:
+                        email_to.append(cc_email)
+                if email_to:
+                    email_to = list(set(email_to))
+                    mailbox_obj = self.pool.get('poweremail.mailbox')
+                    vals2 = vals.copy()
+                    vals2.update({
+                        'pem_to': email_to[0],
+                        'pem_from': email_from,
+                        'pem_cc': email_to[1:] if len(email_to[1:]) else False,
+                        'pem_bcc': False,
+                        'pem_folder': 'outbox',
+                        'mail_type': 'multipart/alternative'
+                    })
+                    mailbox_obj.create(cursor, uid, vals2)
         return res_id
  
 PoweremailMailboxCRM()
