@@ -58,33 +58,40 @@ class PoweremailMailboxCRM(osv.osv):
                 )
         return address_obj.browse(cursor, uid, address_id)
 
-    def create_case_from_mail(self, cursor, uid, p_mail, section,
-                              body_text=False, context=None):
+    def create_crm_case(self, cursor, uid, p_mail_id, section_id,
+                        body_text=False, context=None):
         """
         Creates a CRM.case object from a poweremail.mailbox object
         :param cursor:      OpenERP Cursor
         :param uid:         OpenERP User ID
-        :param p_mail:      PowerEmail Mailbox object
-        :param section:     CRM.case.section that the new case must belong
+        :param p_mail_id:   PowerEmail Mailbox object
+        :param section_id:  CRM.case.section that the new case must belong
         :param body_text:   Mail body parsed, used in the CRM.case.description
         :param context:     OpenERP Context, passed to the create method
-        :return: 
+        :return:
         """
         if context is None:
             context = {}
         case_obj = self.pool.get('crm.case')
+        section_obj = self.pool.get('crm.case.section')
+        poweremail_obj = self.pool.get('poweremail.mailbox')
+
+        p_mail = poweremail_obj.read(cursor, uid, p_mail_id, [
+            'conversation_id', 'pem_subject', 'pem_from', 'pem_cc'
+        ])
+        section = section_obj.read(cursor, uid, section_id, ['user_id'])
 
         case_vals = {
-            'conversation_id': p_mail.conversation_id.id,
-            'name': p_mail.pem_subject,
-            'section_id': section.id,
+            'conversation_id': p_mail['conversation_id'][0],
+            'name': p_mail['pem_subject'],
+            'section_id': section['id'],
             'description': body_text,
-            'email_from': p_mail.pem_from,
-            'email_cc': p_mail.pem_cc,
-            'user_id': section.user_id and section.user_id.id,
+            'email_from': p_mail['pem_from'],
+            'email_cc': p_mail['pem_cc'],
+            'user_id': section['user_id'][0],
         }
-        address = self.get_address_from_powermail_mailbox(
-            cursor, uid, p_mail
+        address = self.get_partner_address(
+            cursor, uid, p_mail['id']
         )
         if address:
             case_vals.update({
