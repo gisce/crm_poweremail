@@ -140,54 +140,10 @@ class PoweremailMailboxCRM(osv.osv):
                 return res_id
             if not case_id:
                 # If not found a conversation, add new case with email values
-                add_obj = self.pool.get('res.partner.address')
-                addr_id = add_obj.search(cursor, uid, [
-                    ('email', '=', qreu.address.parse(p_mail.pem_from).address)
-                ])
-                section = section_obj.browse(cursor, uid, section_id)
-                case_vals = {
-                    'conversation_id': p_mail.conversation_id.id,
-                    'name': p_mail.pem_subject,
-                    'section_id': section_id,
-                    'description': body_text,
-                    'email_from': p_mail.pem_from,
-                    'email_cc': p_mail.pem_cc,
-                    'user_id': section.user_id and section.user_id.id,
-                }
-                if addr_id:
-                    # If partner address found get address and partner id
-                    address = add_obj.read(
-                        cursor, uid, addr_id[0], ['partner_id']
-                    )
-                    address_id = addr_id[0]
-                    partner_id = address['partner_id'][0]
-                else:
-                    partner_obj = self.pool.get('res.partner')
-                    address_email = mail.from_.address
-                    address_name = mail.from_.display_name or address_email
-                    new_address = add_obj.create(cursor, uid, {
-                        'name': address_name,
-                        'email': address_email
-                    })
-                    address_id = new_address.id
-                    domain = address_email.split('@')[-1]
-                    partner_id = partner_obj.search(
-                        cursor, uid, [
-                            ('domain', '=', domain)
-                        ]
-                    )
-                    if partner_id:
-                        add_obj.write(
-                            cursor, uid, address_id, {'partner_id': partner_id}
-                        )
-                    else:
-                        partner_id = False
+                case = self.create_case_from_mail(
+                    cursor, uid, p_mail, body_text, section
+                )
 
-                case_vals.update({
-                    'partner_address_id': address_id,
-                    'partner_id': partner_id
-                })
-                case_obj.create(cursor, uid, case_vals)
             else:
                 case_id = case_id[0]
                 old_descr = case_obj.read(
