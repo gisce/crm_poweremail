@@ -126,9 +126,18 @@ class PoweremailMailboxCRM(osv.osv):
             p_mail = self.browse(cursor, uid, res_id, context=context)
             body_text = quotations.extract_from_plain(p_mail.pem_body_text)
             section_id = section_id[0]
+            section = section_obj.browse(cursor, uid, section_id)
             case_id = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
             ])
+            # If forwarding case e-mail, just send the e-mail
+            if mail.from_.address == section.reply_to:
+                cases = case_obj.browse(cursor, uid, case_id)
+                case_obj._history(
+                    cursor, uid, cases, _('Forward'), history=False,
+                    email=mail.from_.address
+                )
+                return res_id
             if not case_id:
                 # If not found a conversation, add new case with email values
                 add_obj = self.pool.get('res.partner.address')
