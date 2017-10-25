@@ -64,10 +64,20 @@ class PoweremailMailboxCRM(osv.osv):
                     })
                 case_obj.create(cursor, uid, case_vals)
             else:
+                case_id = case_id[0]
+                old_descr = case_obj.read(
+                    cursor, uid, case_id, ['description']
+                )['description']
+                if old_descr:
+                    cases = case_obj.browse(cursor, uid, [case_id])
+                    case_obj._history(
+                        cursor, uid, cases, _('Reply'), history=True,
+                        email=mail.from_.address
+                    )
                 case_obj.write(cursor, uid, case_id, {
                     'description': body_text
                 })
-                cases = case_obj.browse(cursor, uid, case_id)
+                cases = case_obj.browse(cursor, uid, [case_id])
                 case_obj._history(
                     cursor, uid, cases, _('Reply'), history=True,
                     email=mail.from_.address
