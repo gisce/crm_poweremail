@@ -173,12 +173,12 @@ class PoweremailMailboxCRM(osv.osv):
                 # if not in e-mail recipients
                 email_from = section.reply_to
                 email_to = []
-                if case.email_from not in mail.to.addresses:
+                if case.email_from not in reply_to:
                     email_to.append(case.email_from)
-                if case.partner_address_id.email not in mail.to.addresses:
+                if case.partner_address_id.email not in reply_to:
                     email_to.append(case.partner_address_id.email)
                 for cc_email in case.email_cc:
-                    if not cc_email in mail.to.addresses:
+                    if not cc_email in reply_to:
                         email_to.append(cc_email)
                 if email_to:
                     email_to = list(set(email_to))
