@@ -19,8 +19,11 @@ class PoweremailMailboxCRM(osv.osv):
         Gets or Creates the 'res.partner.address' from a poweremail_mailbox
         :param cursor:      OpenERP Cursor
         :param uid:         OpenERP User ID
+        :type uid:          int
         :param p_mail_id:   PowerEmail Mailbox object ID
+        :type p_mail_id:    int
         :return:            Res.Partner.Address (browsed)
+        :rtype:             osv.osv
         """
         address_obj = self.pool.get('res.partner.address')
         partner_obj = self.pool.get('res.partner')
@@ -66,11 +69,17 @@ class PoweremailMailboxCRM(osv.osv):
         Creates a CRM.case object from a poweremail.mailbox object
         :param cursor:      OpenERP Cursor
         :param uid:         OpenERP User ID
+        :type uid:          int
         :param p_mail_id:   PowerEmail Mailbox object
+        :type p_mail_id:    int
         :param section_id:  CRM.case.section that the new case must belong
+        :type section_id:   int
         :param body_text:   Mail body parsed, used in the CRM.case.description
+        :type body_text:    str
         :param context:     OpenERP Context, passed to the create method
-        :return:
+        :type context:      dict
+        :return:            New crm.case object (browsed)
+        :rtype:             osv.osv
         """
         if context is None:
             context = {}
