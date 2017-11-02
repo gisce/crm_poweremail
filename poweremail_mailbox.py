@@ -42,7 +42,9 @@ class PoweremailMailboxCRM(osv.osv):
                   'pem_from address with qreu')
             )
             return False
-        if not address_id:
+        if address_id:
+            address_id = address_id[0]
+        else:
             # If not found: create partner address
             address_email = mail.from_.address
             address_name = mail.from_.display_name or address_email
