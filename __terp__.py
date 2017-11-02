@@ -12,7 +12,7 @@
           See: https://github.com/openlabs/poweremail/issues/24
     """,
     "init_xml": [],
-    'update_xml': ['crm_view.xml', 'crm_data.xml'],
+    'update_xml': ['crm_view.xml', 'crm_data.xml', 'res_partner_view.xml'],
     'demo_xml': [],
     'installable': True,
     'active': False,
