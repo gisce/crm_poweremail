@@ -63,7 +63,7 @@ class PoweremailMailboxCRM(osv.osv):
                 address_obj.write(
                     cursor, uid, address_id, {'partner_id': partner_id}
                 )
-        return address_obj.browse(cursor, uid, address_id)
+        return address_obj.browse(cursor, uid, address_id) or False
 
     def create_crm_case(self, cursor, uid, p_mail_id, section_id,
                         body_text=False, context=None):
