@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-    <data>
+    <data noupdate="1">
         <!-- CRM Poweremail - Templates -->
         <record model="poweremail.templates" id="crm_poweremail_case_template_new">
             <field name="name">New Case Template</field>
