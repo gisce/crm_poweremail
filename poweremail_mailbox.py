@@ -180,7 +180,7 @@ class PoweremailMailboxCRM(osv.osv):
                 if case.partner_address_id.email not in reply_to:
                     email_to.append(case.partner_address_id.email)
                 for cc_email in case.email_cc:
-                    if not cc_email in reply_to:
+                    if cc_email not in reply_to:
                         email_to.append(cc_email)
                 if email_to:
                     email_to = list(set(email_to))
