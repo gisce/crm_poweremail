@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GISCE-ERP\n"
 "Report-Msgid-Bugs-To: https://github.com/gisce/erp/issues\n"
-"POT-Creation-Date: 2017-10-06 13:40\n"
-"PO-Revision-Date: 2017-10-06 11:41+0000\n"
+"POT-Creation-Date: 2017-11-02 17:07\n"
+"PO-Revision-Date: 2017-11-02 16:30+0000\n"
 "Last-Translator: Jaume  Florez Valenzuela <jflorez@gisce.net>\n"
 "Language-Team: Spanish (Spain) <erp@dev.gisce.net>\n"
 "MIME-Version: 1.0\n"
@@ -18,22 +18,15 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:229
+#: field:res.partner,domain:0
+msgid "Email domain"
+msgstr "Dominio de Correo"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:207
 #, python-format
 msgid "Poweremail template \"Email BCC\" has bad formatted address"
 msgstr "La dirección \"BCC\" de la plantilla Power E-mail no tiene un formato correcto"
-
-#. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
-msgid ""
-"Dear ${object.partner_id.name},\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been updated to the state 'Pending'.\n"
-"\n"
-"Awaiting for review.\n"
-"\n"
-"            "
-msgstr "Estimado/da ${object.partner_id.name},\n\nEl caso con identificador: #${object.id} con el asunto: \"${object.name}\"; ha pasado al estado: 'Pending'.\n\nEsperando revisión."
 
 #. module: crm_poweremail
 #: field:crm.case.rule,pm_template_id:0
@@ -41,41 +34,19 @@ msgid "Poweremail Template"
 msgstr "Plantilla Poweremail"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_new
-msgid ""
-"Dear ${object.partner_id.name},\n"
-"\n"
-"In date ${date_now} we have recieved the case with the subject: ${object.name}\n"
-"Case Identifier: #${object.id}\n"
-"\n"
-"Waiting for a responsible to take over the case.\n"
-"\n"
-"            "
-msgstr "Estimado/da ${object.partner_id.name},\n\nEn fecha ${date_now} hemos recibido un caso con el asunto: ${object.name}\n\nIdentificador del Caso: #${object.id}\n\nEsperando la asignación de un responsable.\n\n             \n\n      "
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_new
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_open
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_pending
+msgid "${object.name}"
+msgstr "${object.name}"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:221
-#, python-format
-msgid "Poweremail template \"Email CC\" has bad formatted address"
-msgstr "La dirección \"CC\" de la plantilla Power E-mail no tiene un formato correcto"
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/poweremail_mailbox.py:72
+#: code:addons/crm_poweremail/poweremail_mailbox.py:158
+#: code:addons/crm_poweremail/poweremail_mailbox.py:167
 #, python-format
 msgid "Reply"
 msgstr "Resposta"
-
-#. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
-msgid ""
-"Dear ${object.partner_id.name},\n"
-"\n"
-"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
-"Case Identifier: #${object.id}\n"
-"Responsible: ${object.user_id.name} - ${object.user_id.address_id.email}\n"
-"\n"
-"            "
-msgstr "Estimado/da ${object.partner_id.name},\n\nEn fecha ${date_now} el caso se ha Abierto con el asunto: ${object.name}\n\nIdentificador del Caso: #${object.id}\nResponsable: ${object.user_id.name} - {object.user_id.address_id.email}\n\n       "
 
 #. module: crm_poweremail
 #: view:crm.case:0
@@ -88,30 +59,6 @@ msgid "unknown"
 msgstr "desconocido"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:109
-#, python-format
-msgid ""
-"Can not send mail with empty body,you should have description in the body"
-msgstr "No se puede enviar un correo sin cuerpo, debería haber una descripción en el cuerpo"
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:127
-#, python-format
-msgid "No E-Mail ID Found for your Company address!"
-msgstr "No se ha encontrado un ID de correo electrónico para la dirección de su Compañía!"
-
-#. module: crm_poweremail
-#: constraint:ir.ui.view:0
-msgid "Invalid XML for View Architecture!"
-msgstr "Arquitectura de XML inválida"
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:213
-#, python-format
-msgid "Poweremail template \"Email TO\" has bad formatted address"
-msgstr "La dirección \"TO\" de la plantilla Power E-mail no tiene un formato correcto"
-
-#. module: crm_poweremail
 #: view:crm.case.rule:0
 msgid "E-Mail Actions"
 msgstr "Acciones de Correo Electrónico"
@@ -119,19 +66,75 @@ msgstr "Acciones de Correo Electrónico"
 #. module: crm_poweremail
 #: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
 msgid ""
-"Dear ${object.partner_id.name},\n"
+"Hi there,\n"
 "\n"
 "The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
 "\n"
 "            "
-msgstr "Estimado/da ${object.partner_id.name},\n\nEl caso con el identificador: #${object.id}; con el asunto: \"${object.name}\" se ha CERRADO.\n\n    "
+msgstr "Buenos días,\n\nEl caso con el identificador: #${object.id}; con el asunto: \"${object.name}\" se ha CERRADO.\n\n             "
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid ""
+"Hi there,\n"
+"\n"
+"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"\n"
+"Responsible: ${object.user_id.name} <${object.user_id.address_id.email}>\n"
+"\n"
+"            "
+msgstr "Buenos días,\n\nEn fecha ${date_now} el caso se ha Abierto con el asunto: ${object.name}\n\nIdentificador del Caso: #${object.id}\\nResponsable: ${object.user_id.name} - {object.user_id.address_id.email}\n\n       "
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:131
+#, python-format
+msgid "No E-Mail ID Found for your Company address!"
+msgstr "No se ha encontrado un ID de correo electrónico para la dirección de su Compañía!"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_new
+msgid ""
+"Hi there,\n"
+"\n"
+"In date ${date_now} we have recieved the case with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"\n"
+"Waiting for a responsible to take over the case.\n"
+"\n"
+"            "
+msgstr "Buenos días,\n\nEn fecha ${date_now} hemos recibido un caso con el asunto: ${object.name}\n\nIdentificador del Caso: #${object.id}\n\nEsperando la asignación de un responsable.\n\n             "
+
+#. module: crm_poweremail
+#: constraint:ir.ui.view:0
+msgid "Invalid XML for View Architecture!"
+msgstr "Arquitectura de XML inválida"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/poweremail_mailbox.py:41
+#, python-format
+msgid "Could not parse poweremail_mailbox pem_from address with qreu"
+msgstr "No se puede tratar la dirección \"pem from\" del mensaje de poweremail con \"qreu\""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:189
+#, python-format
+msgid "Poweremail template \"Email TO\" has bad formatted address"
+msgstr "La dirección \"TO\" de la plantilla Power E-mail no tiene un formato correcto"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:113
+#, python-format
+msgid ""
+"Can not send mail with empty body,you should have description in the body"
+msgstr "No se puede enviar un correo sin cuerpo, debería haber una descripción en el cuerpo"
 
 #. module: crm_poweremail
 #: code:addons/crm_poweremail/crm.py:60 code:addons/crm_poweremail/crm.py:67
-#: code:addons/crm_poweremail/crm.py:101 code:addons/crm_poweremail/crm.py:104
-#: code:addons/crm_poweremail/crm.py:108 code:addons/crm_poweremail/crm.py:126
-#: code:addons/crm_poweremail/crm.py:213 code:addons/crm_poweremail/crm.py:221
-#: code:addons/crm_poweremail/crm.py:229
+#: code:addons/crm_poweremail/crm.py:105 code:addons/crm_poweremail/crm.py:108
+#: code:addons/crm_poweremail/crm.py:112 code:addons/crm_poweremail/crm.py:130
+#: code:addons/crm_poweremail/crm.py:189 code:addons/crm_poweremail/crm.py:197
+#: code:addons/crm_poweremail/crm.py:207
 #, python-format
 msgid "Error!"
 msgstr "Error!"
@@ -153,13 +156,13 @@ msgid ""
 msgstr "No se ha encontrado el ID de correo electrónico para la dirección de su Compañía o en la dirección de resupesta de esta sección!"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:129
+#: code:addons/crm_poweremail/crm.py:133
 #, python-format
 msgid "Send"
 msgstr "Enviar"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:105
+#: code:addons/crm_poweremail/crm.py:109
 #, python-format
 msgid ""
 "You must define a responsible user for this case in order to use this "
@@ -192,18 +195,28 @@ msgid "PowerEmail Template"
 msgstr "Plantilla PowerEmail"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:102
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
+msgid ""
+"Hi there,\n"
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been updated to the state 'Pending'.\n"
+"\n"
+"Awaiting for review.\n"
+"\n"
+"            "
+msgstr "Buenos días,\n\nEl caso con identificador: #${object.id} con el asunto: \"${object.name}\"; ha pasado al estado: 'Pendiente'.\n\nEsperando revisión."
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:106
 #, python-format
 msgid "You must put a Partner eMail to use this action!"
 msgstr "Se debe facilitar la dirección de correo electrónico de la Empresa para utilitzar esta acción!"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_new
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_open
-#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_pending
-msgid "${object.name}"
-msgstr "${object.name}"
+#: code:addons/crm_poweremail/crm.py:197
+#, python-format
+msgid "Poweremail template \"Email CC\" has bad formatted address"
+msgstr "La dirección \"CC\" de la plantilla Power E-mail no tiene un formato correcto"
 
 #. module: crm_poweremail
 #: model:ir.module.module,description:crm_poweremail.module_meta_information
