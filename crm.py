@@ -68,8 +68,16 @@ class CrmCase(osv.osv):
                     _("No E-Mail ID Found in Power Email for this section or "
                       "missing reply address in section."))
         email_cc = context.get('email_cc', [])
-        email_cc.append(reply_to)
-        # TODO: Improve reply-to finding in conversation
+        email_bcc = context.get('email_bcc', [])
+        to_del_emails = []
+        for email in emails:
+            if email == '':                             # Remove EMPTY email
+                to_del_emails.append(email)
+            elif email == emailfrom:                    # Remove FROM email
+                to_del_emails.append(email)
+            elif email == case.section_id.reply_to:     # Remove SECTION email
+                to_del_emails.append(email)
+        [emails.remove(email) for email in to_del_emails]
         to_del_emails = []
         for email in email_cc:
             if email == '':             # Remove empty email address
