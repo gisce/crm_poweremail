@@ -13,6 +13,33 @@ class CrmCase(osv.osv):
     _name = 'crm.case'
     _inherit = 'crm.case'
 
+    @staticmethod
+    def filter_mails(emails, email_from, case, todel_emails=False):
+        """
+        :param emails:
+        :type emails:           [str]
+        :param email_from:
+        :type email_from:       str
+        :param email_to:
+        :type email_to:         [str]
+        :param case:
+        :type case:             browse_record
+        :param todel_emails:
+        :type todel_emails:     [str]
+        :return:
+        """
+        to_del_emails = [email for email in todel_emails if email in emails]
+        for email in emails:
+            if email == '':                          # Remove EMPTY email
+                to_del_emails.append(email)
+            elif email == email_from:                # Remove FROM email
+                to_del_emails.append(email)
+            elif email == case.section_id.reply_to:  # Remove SECTION email
+                to_del_emails.append(email)
+        return list(set(
+            [email for email in emails if email not in to_del_emails]
+        ))
+
     def create(self, cursor, uid, vals, context=None):
         """Overwrite create method to create conversation if not in vals.
         """
@@ -69,26 +96,11 @@ class CrmCase(osv.osv):
                       "missing reply address in section."))
         email_cc = context.get('email_cc', [])
         email_bcc = context.get('email_bcc', [])
-        to_del_emails = []
-        for email in emails:
-            if email == '':                             # Remove EMPTY email
-                to_del_emails.append(email)
-            elif email == emailfrom:                    # Remove FROM email
-                to_del_emails.append(email)
-            elif email == case.section_id.reply_to:     # Remove SECTION email
-                to_del_emails.append(email)
-        [emails.remove(email) for email in to_del_emails]
-        to_del_emails = []
-        for email in email_cc:
-            if email == '':                             # Remove EMPTY email
-                to_del_emails.append(email)
-            elif email == emailfrom:                    # Remove FROM email
-                to_del_emails.append(email)
-            elif email in emails:                       # Remove TO email
-                to_del_emails.append(email)
-            elif email == case.section_id.reply_to:     # Remove SECTION email
-                to_del_emails.append(email)
-        [email_cc.remove(email) for email in to_del_emails]
+        emails = self.filter_mails(emails, emailfrom, case)
+        email_cc = self.filter_mails(
+            email_cc, emailfrom, case, todel_emails=emails)
+        email_bcc = self.filter_mails(
+            email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
