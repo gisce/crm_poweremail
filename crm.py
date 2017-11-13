@@ -70,13 +70,17 @@ class CrmCase(osv.osv):
         email_cc = context.get('email_cc', [])
         email_cc.append(reply_to)
         # TODO: Improve reply-to finding in conversation
+        to_del_emails = []
         for email in email_cc:
             if email == '':             # Remove empty email address
-                email_cc.remove(email)
+                to_del_emails.append(email)
             elif email == emailfrom:    # Remove from email from CCs
-                email_cc.remove(email)
+                to_del_emails.append(email)
             elif email in emails:       # Remove TO email from CCs
-                email_cc.remove(email)
+                to_del_emails.append(email)
+            elif email == case.section_id.reply_to:
+                to_del_emails.append(email)
+        [email_cc.remove(email) for email in to_del_emails]
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
