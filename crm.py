@@ -80,13 +80,13 @@ class CrmCase(osv.osv):
         [emails.remove(email) for email in to_del_emails]
         to_del_emails = []
         for email in email_cc:
-            if email == '':             # Remove empty email address
+            if email == '':                             # Remove EMPTY email
                 to_del_emails.append(email)
-            elif email == emailfrom:    # Remove from email from CCs
+            elif email == emailfrom:                    # Remove FROM email
                 to_del_emails.append(email)
-            elif email in emails:       # Remove TO email from CCs
+            elif email in emails:                       # Remove TO email
                 to_del_emails.append(email)
-            elif email == case.section_id.reply_to:
+            elif email == case.section_id.reply_to:     # Remove SECTION email
                 to_del_emails.append(email)
         [email_cc.remove(email) for email in to_del_emails]
         pm_mailbox_obj.create(cursor, uid, {
@@ -99,7 +99,8 @@ class CrmCase(osv.osv):
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
             'conversation_id': case.conversation_id.id,
-            'pem_cc': ', '.join(set(email_cc))
+            'pem_cc': ', '.join(set(email_cc)),
+            'pem_bcc': ', '.join(set(email_bcc))
         })
         return True
 
