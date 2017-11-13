@@ -13,6 +13,33 @@ class CrmCase(osv.osv):
     _name = 'crm.case'
     _inherit = 'crm.case'
 
+    @staticmethod
+    def filter_mails(emails, email_from, case, todel_emails=False):
+        """
+        :param emails:
+        :type emails:           [str]
+        :param email_from:
+        :type email_from:       str
+        :param email_to:
+        :type email_to:         [str]
+        :param case:
+        :type case:             browse_record
+        :param todel_emails:
+        :type todel_emails:     [str]
+        :return:
+        """
+        to_del_emails = [email for email in todel_emails if email in emails]
+        for email in emails:
+            if email == '':                          # Remove EMPTY email
+                to_del_emails.append(email)
+            elif email == email_from:                # Remove FROM email
+                to_del_emails.append(email)
+            elif email == case.section_id.reply_to:  # Remove SECTION email
+                to_del_emails.append(email)
+        return list(set(
+            [email for email in emails if email not in to_del_emails]
+        ))
+
     def create(self, cursor, uid, vals, context=None):
         """Overwrite create method to create conversation if not in vals.
         """
@@ -68,10 +95,12 @@ class CrmCase(osv.osv):
                     _("No E-Mail ID Found in Power Email for this section or "
                       "missing reply address in section."))
         email_cc = context.get('email_cc', [])
-        email_cc.append(reply_to)
-        # TODO: Improve reply-to finding in conversation
-        if '' in email_cc:
-            email_cc.remove('')
+        email_bcc = context.get('email_bcc', [])
+        emails = self.filter_mails(emails, emailfrom, case)
+        email_cc = self.filter_mails(
+            email_cc, emailfrom, case, todel_emails=emails)
+        email_bcc = self.filter_mails(
+            email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
@@ -82,7 +111,8 @@ class CrmCase(osv.osv):
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
             'conversation_id': case.conversation_id.id,
-            'pem_cc': ', '.join(set(email_cc))
+            'pem_cc': ', '.join(set(email_cc)),
+            'pem_bcc': ', '.join(set(email_bcc))
         })
         return True
 
