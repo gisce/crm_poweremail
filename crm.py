@@ -14,7 +14,7 @@ class CrmCase(osv.osv):
     _inherit = 'crm.case'
 
     @staticmethod
-    def filter_mails(emails, email_from, case, todel_emails=False):
+    def filter_mails(emails, email_from, case, todel_emails=[]):
         """
         :param emails:
         :type emails:           [str]
