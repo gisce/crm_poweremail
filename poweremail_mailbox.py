@@ -120,6 +120,9 @@ class PoweremailMailboxCRM(osv.osv):
         res_id = super(PoweremailMailboxCRM, self).create(cursor, uid, vals,
                                                           context)
         p_mail = self.browse(cursor, uid, res_id, context=context)
+        if p_mail.state == 'read':
+            # If downloaded a readed e-mail: do nothing
+            return res_id
         # If original format mail, use it
         if p_mail.pem_mail_orig:
             mail = qreu.Email(p_mail.pem_mail_orig)
