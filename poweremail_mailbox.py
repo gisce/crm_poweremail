@@ -30,10 +30,10 @@ class PoweremailMailboxCRM(osv.osv):
         p_mail = self.pool.get('poweremail.mailbox').read(
             cursor, uid, p_mail_id, ['pem_mail_orig', 'pem_from']
         )
-        mail = qreu.Email(p_mail['pem_mail_orig'])
+        mail = qreu.Email.parse(p_mail['pem_mail_orig'])
         try:
             address_id = address_obj.search(cursor, uid, [
-                ('email', '=', qreu.address.parse(p_mail['pem_from']).address)
+                ('email', '=', mail.from_.address)
             ])
         except Exception as err:
             import logging
@@ -125,7 +125,7 @@ class PoweremailMailboxCRM(osv.osv):
             return res_id
         # If original format mail, use it
         if p_mail.pem_mail_orig:
-            mail = qreu.Email(p_mail.pem_mail_orig)
+            mail = qreu.Email.parse(p_mail.pem_mail_orig)
             reply_to = mail.recipients.addresses
         else:
             # If no mail source found, the mail is being sent
@@ -142,7 +142,7 @@ class PoweremailMailboxCRM(osv.osv):
             body_text = quotations.extract_from_plain(p_mail.pem_body_text)
             section_id = section_id[0]
             section = section_obj.browse(cursor, uid, section_id)
-            if mail.from_ == section.reply_to:
+            if mail.from_.address == section.reply_to:
                 return res_id
             case_id = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
