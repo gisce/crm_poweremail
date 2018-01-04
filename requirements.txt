@@ -1,2 +1,3 @@
 Mako
 talon
+qreu>=0.4.0
