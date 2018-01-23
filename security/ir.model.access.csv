@@ -1,0 +1,3 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"access_pe_template_case_manager","poweremail.templates","poweremail.model_poweremail_templates","crm.group_crm_manager",1,1,1,1
+"access_pe_template_case_users","poweremail.templates","poweremail.model_poweremail_templates","crm.group_crm_user",1,1,0,0
