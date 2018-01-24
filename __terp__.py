@@ -1,6 +1,6 @@
 {
     "name": "CRM Poweremail",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "depends": ["base", "crm", "poweremail"],
     "author": "GISCE-TI",
     "category": "CRM",
