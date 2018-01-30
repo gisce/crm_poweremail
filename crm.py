@@ -149,10 +149,9 @@ class CrmCase(osv.osv):
             })
             emails = [case.email_from]
             if case.email_cc:
-                context['email_cc'] = ', '.join(
-                    set([x.strip()
-                    for x in case.email_cc.split(',')])
-                )
+                context['email_cc'] = list(set(
+                    [x.strip() for x in case.email_cc.split(',')]
+                ))
             body = case.description or ''
             emailfrom = case.user_id.address_id \
                         and case.user_id.address_id.email or False
