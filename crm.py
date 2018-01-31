@@ -5,6 +5,7 @@ from mako.template import Template
 
 from osv import osv, fields
 from tools.translate import _
+from tools import config
 
 
 class CrmCase(osv.osv):
@@ -256,16 +257,22 @@ class CrmCaseRule(osv.osv):
         pm_template = pm_template_obj.browse(cr, uid, action_template)
         pm_send_wizard_obj = self.pool.get('poweremail.send.wizard')
         ctx = context.copy()
+        # Get lang from template
         lang = pm_send_wizard_obj.get_value(
             cr, uid, pm_template, pm_template.lang, context, id=case.id)
         if not lang:
-            lang = (
-                case.partner_id.lang if case.partner_id and case.partner_id.lang
-                else (case.user_id.context_lang
-                      if case.user_id and case.user_id.context_lang
-                      else False
-                )
-            )
+            # Get lang from case.partner_id (source)
+            if case.partner_id and case.partner_id.lang:
+                lang = case.partner_id.lang
+            # Get lang from case.user_id (responsible)
+            elif case.user_id and case.user_id.context_lang:
+                lang = case.user_id.context_lang
+            # Get lang from Context (Server-based)
+            elif ctx.get('lang', False):
+                lang = ctx.get('lang')
+            # Get lang from config file
+            else:
+                lang = config.get('language', False) or False
         if lang:
             ctx['lang'] = lang
         template_body = pm_template_obj.read(
