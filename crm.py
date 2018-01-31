@@ -271,10 +271,8 @@ class CrmCaseRule(osv.osv):
             elif ctx.get('lang', False):
                 lang = ctx.get('lang')
             # Get lang from config file
-            elif config.get('language', False):
-                lang = config.get('language')
             else:
-                lang = False
+                lang = config.get('language', False) or False
         if lang:
             ctx['lang'] = lang
         template_body = pm_template_obj.read(
