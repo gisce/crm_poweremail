@@ -1,9 +1,6 @@
+# -*- coding: utf-8 -*-
 {
     "name": "CRM Poweremail",
-    "version": "0.5.7",
-    "depends": ["base", "crm", "poweremail"],
-    "author": "GISCE-TI",
-    "category": "CRM",
     "description": """
     This module provide :
         * Integration between CRM and Poweremail
@@ -11,15 +8,22 @@
     NOTE: Needs poweremail with conversations suport.
           See: https://github.com/openlabs/poweremail/issues/24
     """,
-    "init_xml": [],
-    'update_xml': [
-        'crm_view.xml',
-        'crm_data.xml',
-        'res_partner_view.xml',
-        'security/ir.model.access.csv'
+    "version": "0.5.7",
+    "author": "GISCE-TI",
+    "category": "CRM",
+    "depends":[
+        "base",
+        "crm",
+        "poweremail"
     ],
-    'demo_xml': [],
-    'installable': True,
-    'active': False,
-#    'certificate': 'certificate',
+    "init_xml": [],
+    "demo_xml": [],
+    "update_xml":[
+        "crm_view.xml",
+        "crm_data.xml",
+        "res_partner_view.xml",
+        "security/ir.model.access.csv"
+    ],
+    "active": False,
+    "installable": True
 }
