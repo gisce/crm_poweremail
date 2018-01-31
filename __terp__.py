@@ -8,7 +8,7 @@
     NOTE: Needs poweremail with conversations suport.
           See: https://github.com/openlabs/poweremail/issues/24
     """,
-    "version": "0.5.2",
+    "version": "0.5.6",
     "author": "GISCE-TI",
     "category": "CRM",
     "depends":[
@@ -21,7 +21,8 @@
     "update_xml":[
         "crm_view.xml",
         "crm_data.xml",
-        "res_partner_view.xml"
+        "res_partner_view.xml",
+        "security/ir.model.access.csv"
     ],
     "active": False,
     "installable": True

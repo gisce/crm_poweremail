@@ -120,9 +120,10 @@ class PoweremailMailboxCRM(osv.osv):
         res_id = super(PoweremailMailboxCRM, self).create(cursor, uid, vals,
                                                           context)
         p_mail = self.browse(cursor, uid, res_id, context=context)
-        if p_mail.state == 'read':
-            # If downloaded a readed e-mail: do nothing
-            return res_id
+        # This does not work due to smtp's fetch returning always //SEEN
+        # if p_mail.state == 'read':
+        #     # If downloaded a readed e-mail: do nothing
+        #     return res_id
         # If original format mail, use it
         if p_mail.pem_mail_orig:
             mail = qreu.Email.parse(p_mail.pem_mail_orig)
@@ -143,6 +144,7 @@ class PoweremailMailboxCRM(osv.osv):
             section_id = section_id[0]
             section = section_obj.browse(cursor, uid, section_id)
             if mail.from_.address == section.reply_to:
+                # Ignore mails sent FROM this section
                 return res_id
             case_id = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
