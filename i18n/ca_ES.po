@@ -2,13 +2,13 @@
 # This file contains the translation of the following modules:
 # 
 # Translators:
-# Jaume  Florez Valenzuela <jflorez@gisce.net>, 2017.
+# Jaume  Florez Valenzuela <jflorez@gisce.net>, 2017, 2018.
 msgid ""
 msgstr ""
 "Project-Id-Version: GISCE-ERP\n"
 "Report-Msgid-Bugs-To: https://github.com/gisce/erp/issues\n"
-"POT-Creation-Date: 2017-11-02 17:07\n"
-"PO-Revision-Date: 2017-11-02 16:34+0000\n"
+"POT-Creation-Date: 2018-02-20 08:47\n"
+"PO-Revision-Date: 2018-02-21 14:56+0000\n"
 "Last-Translator: Jaume  Florez Valenzuela <jflorez@gisce.net>\n"
 "Language-Team: Catalan (Spain) <erp@dev.gisce.net>\n"
 "MIME-Version: 1.0\n"
@@ -23,10 +23,31 @@ msgid "Email domain"
 msgstr "Domini de Correu"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:207
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
+msgid ""
+"\n"
+"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
+"\n"
+"            "
+msgstr "\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha TANCAT.\n\n            "
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:237
 #, python-format
 msgid "Poweremail template \"Email BCC\" has bad formatted address"
 msgstr "La direcció \"BCC\" de la plantilla Power E-mail no té un format correcte"
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_new
+msgid ""
+"\n"
+"In date ${date_now} we have recieved the case with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"\n"
+"Waiting for a responsible to take over the case.\n"
+"\n"
+"            "
+msgstr "\nEn data ${date_now} hem rebut un cas amb l'assumpte: ${object.name}\n\nIdentificador del cas: #${object.id}\n\nEsperant l'assignació d'un responsable.\n\n                  "
 
 #. module: crm_poweremail
 #: field:crm.case.rule,pm_template_id:0
@@ -42,8 +63,8 @@ msgid "${object.name}"
 msgstr "${object.name}"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/poweremail_mailbox.py:158
-#: code:addons/crm_poweremail/poweremail_mailbox.py:167
+#: code:addons/crm_poweremail/poweremail_mailbox.py:165
+#: code:addons/crm_poweremail/poweremail_mailbox.py:174
 #, python-format
 msgid "Reply"
 msgstr "Resposta"
@@ -64,46 +85,10 @@ msgid "E-Mail Actions"
 msgstr "Accions de correu electrònic"
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close
-msgid ""
-"Hi there,\n"
-"\n"
-"The case with identifier: #${object.id} with the subject: \"${object.name}\" has been CLOSED.\n"
-"\n"
-"            "
-msgstr "Bon dia,\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha TANCAT.\n\n            "
-
-#. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
-msgid ""
-"Hi there,\n"
-"\n"
-"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
-"Case Identifier: #${object.id}\n"
-"\n"
-"Responsible: ${object.user_id.name} <${object.user_id.address_id.email}>\n"
-"\n"
-"            "
-msgstr "Bon dia,\n\nEn data ${date_now} s'ha Obert un cas amb l'assumpte: ${object.name}\n\nIdentificador del cas: #${object.id}\n\nResponsable: ${object.user_id.name} <${object.user_id.address_id.email}>\n\n            "
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:131
+#: code:addons/crm_poweremail/crm.py:161
 #, python-format
 msgid "No E-Mail ID Found for your Company address!"
 msgstr "No s'ha trobat la ID del correu electrònic de la direcció de la seva Companyia"
-
-#. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_new
-msgid ""
-"Hi there,\n"
-"\n"
-"In date ${date_now} we have recieved the case with the subject: ${object.name}\n"
-"Case Identifier: #${object.id}\n"
-"\n"
-"Waiting for a responsible to take over the case.\n"
-"\n"
-"            "
-msgstr "Bon dia,\n\nEn data ${date_now} s'ha rebut un cas amb l'assumpte: ${object.name}\n\nIdentificador del cas: #${object.id}\n\nEsperant l'assignació d'un responsable.\n\n            "
 
 #. module: crm_poweremail
 #: constraint:ir.ui.view:0
@@ -117,30 +102,37 @@ msgid "Could not parse poweremail_mailbox pem_from address with qreu"
 msgstr "No es pot tractar l'adreça \"pem_from\" del correu de poweremail amb \"qreu\""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:189
+#: code:addons/crm_poweremail/crm.py:219
 #, python-format
 msgid "Poweremail template \"Email TO\" has bad formatted address"
 msgstr "La direcció \"TO\" de la plantilla Power E-mail no té un format correcte"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:113
+#: code:addons/crm_poweremail/crm.py:144
 #, python-format
 msgid ""
 "Can not send mail with empty body,you should have description in the body"
 msgstr "No es pot enviar un correu amb el cos buit, hauria d'haver una descripció en el cos del missatge"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:60 code:addons/crm_poweremail/crm.py:67
-#: code:addons/crm_poweremail/crm.py:105 code:addons/crm_poweremail/crm.py:108
-#: code:addons/crm_poweremail/crm.py:112 code:addons/crm_poweremail/crm.py:130
-#: code:addons/crm_poweremail/crm.py:189 code:addons/crm_poweremail/crm.py:197
-#: code:addons/crm_poweremail/crm.py:207
-#, python-format
-msgid "Error!"
-msgstr "Error!"
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid ""
+"\n"
+"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
+"Case Identifier: #${object.id}\n"
+"\n"
+"Responsible: ${object.user_id.name} <${object.user_id.address_id.email}>\n"
+"\n"
+"            "
+msgstr "\nEn data ${date_now} s'ha obert un cas amb l'assumpte: ${object.name}\nIdentificador del cas: #${object.id}\n\nResponsable: ${object.user_id.name} <${object.user_id.address_id.email}>\n\n            "
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:68
+#: field:crm.case,conversation_id:0
+msgid "Conversation"
+msgstr "Conversa"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:96
 #, python-format
 msgid ""
 "No E-Mail ID Found in Power Email for this section or missing reply address "
@@ -148,7 +140,7 @@ msgid ""
 msgstr "No s'ha trobat el ID del correu electrònic per aquesta secció o falta el correu electrònic de resposta per aquesta secció."
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:61
+#: code:addons/crm_poweremail/crm.py:89
 #, python-format
 msgid ""
 "No E-Mail ID Found for your Company address or missing reply address in "
@@ -156,13 +148,13 @@ msgid ""
 msgstr "No s'ha trobat el ID del correu electrònic de la seva Companyia o falta el correu electrònic de resposta per aquesta secció!"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:133
+#: code:addons/crm_poweremail/crm.py:163
 #, python-format
 msgid "Send"
 msgstr "Enviar"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:109
+#: code:addons/crm_poweremail/crm.py:140
 #, python-format
 msgid ""
 "You must define a responsible user for this case in order to use this "
@@ -180,9 +172,14 @@ msgid "CRM Poweremail"
 msgstr "CRM Poweremail"
 
 #. module: crm_poweremail
-#: field:crm.case,conversation_id:0
-msgid "Conversation"
-msgstr "Conversa"
+#: code:addons/crm_poweremail/crm.py:88 code:addons/crm_poweremail/crm.py:95
+#: code:addons/crm_poweremail/crm.py:136 code:addons/crm_poweremail/crm.py:139
+#: code:addons/crm_poweremail/crm.py:143 code:addons/crm_poweremail/crm.py:160
+#: code:addons/crm_poweremail/crm.py:219 code:addons/crm_poweremail/crm.py:227
+#: code:addons/crm_poweremail/crm.py:237
+#, python-format
+msgid "Error!"
+msgstr "Error!"
 
 #. module: crm_poweremail
 #: constraint:crm.case.rule:0
@@ -190,30 +187,29 @@ msgid "Error: The mail is not well formated"
 msgstr "Error: El correu no està en un format correcte"
 
 #. module: crm_poweremail
-#: view:crm.case.rule:0
-msgid "PowerEmail Template"
-msgstr "Plantilla PowerEmail"
-
-#. module: crm_poweremail
 #: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_pending
 msgid ""
-"Hi there,\n"
 "\n"
 "The case with identifier: #${object.id} with the subject: \"${object.name}\" has been updated to the state 'Pending'.\n"
 "\n"
 "Awaiting for review.\n"
 "\n"
 "            "
-msgstr "Bon dia,\n\nEl cas amb l'identificador: #${object.id} amb l'assumpte: \"${object.name}\" s'ha actualitzat al estat 'Pendent'.\n\nEsperant la revisió.\n\n            "
+msgstr "\nEl cas amb identificador: #${object.id}; amb l'assumpte: \"${object.name}\" s'ha actualitzat al estat 'Pendent'.\n\nEsperant la revisió per part del client.\n\n            "
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:106
+#: view:crm.case.rule:0
+msgid "PowerEmail Template"
+msgstr "Plantilla PowerEmail"
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:137
 #, python-format
 msgid "You must put a Partner eMail to use this action!"
 msgstr "S'ha d'introduïr el correu electrònic de l'Empresa per poder utilitzar aquesta acció"
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:197
+#: code:addons/crm_poweremail/crm.py:227
 #, python-format
 msgid "Poweremail template \"Email CC\" has bad formatted address"
 msgstr "La direcció \"CC\" de la plantilla Power E-mail no té un format correcte"
