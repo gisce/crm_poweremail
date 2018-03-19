@@ -55,7 +55,9 @@ class PoweremailMailboxCRM(osv.osv):
             domain = address_email.split('@')[-1]
             partner_id = partner_obj.search(
                 cursor, uid, [
-                    ('domain', '=', domain)
+                    '|',
+                    ('domain', 'ilike', '%' + domain),
+                    ('domain', 'ilike', domain + '%')
                 ]
             )
             if partner_id:
