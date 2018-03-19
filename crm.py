@@ -187,7 +187,17 @@ class CrmCase(osv.osv):
             type='one2many',
             obj='poweremail.mailbox',
             method=True
-        )
+        ),
+        'email_bcc': fields.char('Secret Watchers Emails', size=252),
+        'cc_address_ids': fields.many2many(
+            obj='res.partner.address', rel='crm_case_watchers_address',
+            id1='case_id', id2='address_id', string='Watchers Addresses (CC)'
+        ),
+        'bcc_address_ids': fields.many2many(
+            obj='res.partner.address', rel='crm_case_secret_watchers_address',
+            id1='case_id', id2='address_id',
+            string='Secret Watchers Addresses (BCC)'
+        ),
     }
 
 CrmCase()

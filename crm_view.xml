@@ -11,6 +11,24 @@
             		<page string="Conversations">
             			<field name="conversation_mails" nolabel="1" colspan="4" />
             		</page>
+                    <page string="Watchers">
+                        <field name="email_cc" readonly="1" colspan="4"/>
+                        <field name="cc_address_ids" mode="tree,form" colspan="4">
+                            <tree>
+                                <field name="partner_id"/>
+                                <field name="name"/>
+                                <field name="email"/>
+                            </tree>
+                        </field>
+                        <field name="email_bcc" readonly="1" colspan="4"/>
+                        <field name="bcc_address_ids" mode="tree,form" colspan="4">
+                            <tree>
+                                <field name="partner_id"/>
+                                <field name="name"/>
+                                <field name="email"/>
+                            </tree>
+                        </field>
+                    </page>
             	</page>
             </field>
         </record>
