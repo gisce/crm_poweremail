@@ -41,6 +41,54 @@ class CrmCase(osv.osv):
             [email for email in emails if email not in to_del_emails]
         ))
 
+    def _onchange_address_ids(
+            self, cursor, uid, ids,
+            addr_type=False, addr_ids=False,
+            context=None):
+        """
+        Onchange method to update watchers emails list when the many2many is updated
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP current User ID
+        :param ids:         OpenERP current OSV ID
+        :param addr_type:   Type of the address updated (CC/BCC)
+        :param addr_ids:    New address ids (with format: [[6,0,ids]])
+        :param context:     OpenERp Context
+        :return:            Vals to update
+        """
+        if context is None:
+            context = {}
+        if addr_type not in ('cc', 'bcc') or not addr_ids:
+            return {}
+        if isinstance(ids, list):
+            ids = ids[0]
+        new_addr_ids = addr_ids[0][2]
+        res = {}
+        to_update = 'email_{}'.format(addr_type)
+        to_read = '{}_address_ids'.format(addr_type)
+        # Gather all data (Old emails in csv, old_addr_ids && new_addr_ids)
+        old_vals = self.read(cursor, uid, ids, [to_read, to_update])
+        old_addr_ids = old_vals[to_read]
+        old_emails = [
+            m.strip() for m in (old_vals[to_update] or '').split(',')
+            if m.strip()
+        ]
+        addresses_obj = self.pool.get('res.partner.address')
+        old_addresses = addresses_obj.read(
+            cursor, uid, old_addr_ids, ['email'])
+        if old_addresses:
+            old_addresses = [m['email'] for m in old_addresses if m['email']]
+        new_addresses = addresses_obj.read(
+            cursor, uid, new_addr_ids, ['email'])
+        if new_addresses:
+            new_addresses = [m['email'] for m in new_addresses if m['email']]
+        # Check emails to keep (in old_emails but not in old_addresses)
+        keep_emails = [m for m in old_emails if m not in old_addresses]
+        # ADD All emails from new list and keep_emails without duplicated emails
+        new_emails = ', '.join(list(set(
+            [m for m in new_addresses] + keep_emails)
+        ))
+        return {'value': {to_update: new_emails or False}}
+
     def create(self, cursor, uid, vals, context=None):
         """Overwrite create method to create conversation if not in vals.
         """
