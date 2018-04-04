@@ -56,14 +56,6 @@ class PoweremailMailboxCRM(osv.osv):
             partner_id = partner_obj.search(
                 cursor, uid, [('domain', '=', domain)]
             )
-            if not partner_id:
-                partner_id = partner_obj.search(
-                    cursor, uid, [
-                        '|',
-                        ('domain', 'ilike', '%' + domain),
-                        ('domain', 'ilike', domain + '%')
-                    ]
-                )
             if partner_id:
                 address_obj.write(
                     cursor, uid, address_id, {'partner_id': partner_id[0]}
