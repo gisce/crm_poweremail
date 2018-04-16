@@ -1,11 +1,6 @@
 # coding=utf-8
-from __future__ import unicode_literals
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
-
 from destral import testing
 from destral.transaction import Transaction
-from expects import *
 
 import logging
 
@@ -21,32 +16,70 @@ class TestCRMPoweremail(testing.OOTestCase):
     def tearDown(self):
         self.txn.stop()
 
+    def _check_onchange(self, emails, case_id, mail_type):
+        case_obj = self.pool.get('crm.case')
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+        case_mails = ''
+        if mail_type == 'cc':
+            case_mails = case.email_cc
+        elif mail_type == 'bcc':
+            case_mails = case.email_bcc
+        self.assertEqual(case_mails, emails,
+                         msg='Case emails:\n'
+                             '{}\n'
+                             '\tDo not match with expected\n'
+                             '{}'.format(case_mails, emails))
+        appended_string = (
+            u'testing@example.com, {}'.format(emails)
+        )
+        not_appended_string = emails
+        changed_addresses = case._onchange_address_ids(mail_type, [[1, 1, [1]]])
+        self.assertEqual(
+            changed_addresses['value']['email_{}'.format(mail_type)],
+            appended_string,
+            msg='Appended string:\n'
+                '{}\n'
+                '\tDoes not match with the new addresses:\n'
+                '{}'.format(
+                changed_addresses['value']['email_{}'.format(mail_type)],
+                appended_string
+            )
+        )
+        vals = {
+            'email_{}'.format(mail_type): appended_string,
+            '{}_address_ids'.format(mail_type): [[6, 0, [1]]]
+        }
+        case.write(vals)
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+        changed_addresses = case._onchange_address_ids(mail_type, [[1, 1, []]])
+        self.assertEqual(
+            changed_addresses['value']['email_{}'.format(mail_type)],
+            not_appended_string,
+            msg='Removing address string:\n'
+                '{}\n'
+                '\tDoes not match with the new addresses:\n'
+                '{}'.format(
+                case._onchange_address_ids(mail_type, [[1, 1, []]]),
+                not_appended_string
+            )
+        )
+
     def test_onchange_address_ids(self):
         # def _onchange_address_ids(
         # cursor, uid, ids,addr_type=False, addr_ids=False,context=None
         imod_obj = self.pool.get('ir.model.data')
-        case_obj = self.pool.get('crm.case')
+        address_obj = self.pool.get('res.partner.address')
+        address_obj.write(
+            self.cursor, self.uid, 1, {'email': 'testing@example.com'})
         case_id = imod_obj.get_object_reference(
             self.cursor, self.uid, 'crm_poweremail', 'crmpoweremail_case01')[1]
-        case = case_obj.browse(self.cursor, self.uid, case_id)
-        self.assertEqual(case.email_cc, 'test2@mail.com, me@example.com')
-        self.assertEqual(case.email_bcc, 'test@mail.com, test@example.com')
-        appended_string = 'testing@example.com, test2@mail.com, me@example.com'
-        not_appended_string = 'test2@mail.com, me@example.com'
-        self.assertEqual(
-            case._onchange_address_ids('cc', [[1, 1, [1]]]), {
-                'value': {
-                    'email_cc': appended_string
-                }
-            },
-            msg='Appended string does not match with the new address'
-        )
-        case.write({'email_cc': appended_string})
-        self.assertEqual(
-            case._onchange_address_ids('cc', [[1, 1, []]]), {
-                'value': {
-                    'email_cc': not_appended_string
-                }
-            },
-            msg='Removing address does not return correct string'
-        )
+        orig_mails_cc = 'test2@mail.com, me@example.com'
+        orig_mails_bcc = 'test@mail.com, test@example.com'
+        self.logger.info('Testing onchange for CC')
+        self._check_onchange(emails=orig_mails_cc,
+                             case_id=case_id,
+                             mail_type='cc')
+        self.logger.info('Testing onchange for BCC')
+        self._check_onchange(emails=orig_mails_bcc,
+                             case_id=case_id,
+                             mail_type='bcc')
