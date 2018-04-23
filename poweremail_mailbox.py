@@ -52,11 +52,9 @@ class PoweremailMailboxCRM(osv.osv):
                 'name': address_name,
                 'email': address_email
             })
-            domain = address_email.split('@')[-1]
+            domain = address_email.split('@')[-1].strip()
             partner_id = partner_obj.search(
-                cursor, uid, [
-                    ('domain', '=', domain)
-                ]
+                cursor, uid, [('domain', '=', domain)]
             )
             if partner_id:
                 address_obj.write(
