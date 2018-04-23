@@ -180,13 +180,19 @@ class PoweremailMailboxCRM(osv.osv):
                 # if not in e-mail recipients
                 email_from = section.reply_to
                 email_to = []
+                email_bcc = []
                 if case.email_from not in reply_to:
                     email_to.append(case.email_from)
                 if case.partner_address_id.email not in reply_to:
                     email_to.append(case.partner_address_id.email)
-                for cc_email in case.email_cc:
-                    if cc_email not in reply_to:
-                        email_to.append(cc_email)
+                for cc_email in case.email_cc.split(','):
+                    cc = cc_email.strip()
+                    if cc not in reply_to:
+                        email_to.append(cc)
+                for bcc_email in case.email_bcc.split(','):
+                    bcc = bcc_email.strip()
+                    if bcc not in email_to:
+                        email_bcc.append(bcc)
                 if email_to:
                     email_to = list(set(email_to))
                     mailbox_obj = self.pool.get('poweremail.mailbox')
@@ -195,6 +201,7 @@ class PoweremailMailboxCRM(osv.osv):
                         'pem_to': email_to[0],
                         'pem_from': email_from,
                         'pem_cc': email_to[1:] if len(email_to[1:]) else False,
+                        'pem_bcc': email_bcc,
                         'pem_subject': p_mail.pem_subject,
                         'pem_body_text': p_mail.pem_body_text,
                         'pem_body_html': p_mail.pem_body_html,

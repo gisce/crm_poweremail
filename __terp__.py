@@ -14,15 +14,17 @@
     "depends":[
         "base",
         "crm",
-        "poweremail"
+        "poweremail",
     ],
     "init_xml": [],
-    "demo_xml": [],
+    "demo_xml": [
+        "crm_demo.xml",
+    ],
     "update_xml":[
         "crm_view.xml",
         "crm_data.xml",
         "res_partner_view.xml",
-        "security/ir.model.access.csv"
+        "security/ir.model.access.csv",
     ],
     "active": False,
     "installable": True
