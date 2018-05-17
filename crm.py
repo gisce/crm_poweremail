@@ -90,6 +90,48 @@ class CrmCase(osv.osv):
         res = super(CrmCase, self).write(cursor, uid, ids, vals, context)
         return res
 
+    def get_cc_emails(self, cursor, uid, case_id, context=None):
+        """
+        ADD Emails from Context
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :type uid:          long
+        :param case_id:     CRM.Case IDs
+        :type case_id:      list[long]
+        :param context:     OpenERP Context
+        :type context:      dict
+        :return:            List of emails used as CC
+        :rtype:             list[str]
+        """
+        if isinstance(case_id, (list, tuple)):
+            case_id = case_id[0]
+        emails = super(CrmCase, self).get_cc_emails(
+            cursor, uid, case_id, context=context)
+        return list(set(emails+context.get('email_cc', [])))
+
+    def get_bcc_emails(self, cursor, uid, case_id, context=None):
+        """
+        ADD Emails from:
+        - Context
+        - Watchers BCC
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :type uid:          long
+        :param case_id:     CRM.Case IDs
+        :type case_id:      list[long]
+        :param context:     OpenERP Context
+        :type context:      dict
+        :return:            List of emails used as CC
+        :rtype:             list[str]
+        """
+        if isinstance(case_id, (list, tuple)):
+            case_id = case_id[0]
+        watchers_bcc = self.read(
+            cursor, uid, [case_id], ['email_bcc'], context=context)['email_bcc']
+        emails = super(CrmCase, self).get_cc_emails(
+            cursor, uid, case_id, context=context)
+        return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
+
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
         :param cr:      OpenERP Cursor
@@ -127,8 +169,8 @@ class CrmCase(osv.osv):
                     _("No E-Mail ID Found in Power Email for this section or "
                       "missing reply address in section."))
 
-        email_cc = case.get_cc_emails() + context.get('email_cc', [])
-        email_bcc = case.get_bcc_emails() + context.get('email_bcc', [])
+        email_cc = case.get_cc_emails(context=context)
+        email_bcc = case.get_bcc_emails(context=context)
         emails = self.filter_mails(emails, emailfrom, case)
         email_cc = self.filter_mails(
             email_cc, emailfrom, case, todel_emails=emails)
