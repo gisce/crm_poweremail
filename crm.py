@@ -127,7 +127,8 @@ class CrmCase(osv.osv):
         if isinstance(case_id, (list, tuple)):
             case_id = case_id[0]
         watchers_bcc = self.read(
-            cursor, uid, [case_id], ['email_bcc'], context=context)['email_bcc']
+            cursor, uid, [case_id], ['email_bcc'], context=context
+        )[0]['email_bcc'] or []
         emails = super(CrmCase, self).get_cc_emails(
             cursor, uid, case_id, context=context)
         return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
