@@ -14,33 +14,6 @@ class CrmCase(osv.osv):
     _name = 'crm.case'
     _inherit = 'crm.case'
 
-    @staticmethod
-    def filter_mails(emails, email_from, case, todel_emails=[]):
-        """
-        :param emails:
-        :type emails:           [str]
-        :param email_from:
-        :type email_from:       str
-        :param email_to:
-        :type email_to:         [str]
-        :param case:
-        :type case:             browse_record
-        :param todel_emails:
-        :type todel_emails:     [str]
-        :return:
-        """
-        to_del_emails = [email for email in todel_emails if email in emails]
-        for email in emails:
-            if email == '':                          # Remove EMPTY email
-                to_del_emails.append(email)
-            elif email == email_from:                # Remove FROM email
-                to_del_emails.append(email)
-            elif email == case.section_id.reply_to:  # Remove SECTION email
-                to_del_emails.append(email)
-        return list(set(
-            [email for email in emails if email not in to_del_emails]
-        ))
-
     def _onchange_address_ids(
             self, cursor, uid, ids,
             addr_type=False, addr_ids=False,
@@ -119,6 +92,16 @@ class CrmCase(osv.osv):
 
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
+        :param cr:      OpenERP Cursor
+        :param uid:     OpenERP User ID
+        :param case:    CRM.Case Browse Record
+        :param emails:  Email Addresses [TO]
+        :type emails:   list[str]
+        :param body:    Email Text Body
+        :type body:     str
+        :param context: OpenERP Context
+        :type context:  dict
+        :return:
         """
         if not context:
             context = {}
@@ -143,13 +126,15 @@ class CrmCase(osv.osv):
             raise osv.except_osv(_('Error!'),
                     _("No E-Mail ID Found in Power Email for this section or "
                       "missing reply address in section."))
-        email_cc = context.get('email_cc', [])
-        email_bcc = context.get('email_bcc', [])
+
+        email_cc = case.get_cc_emails() + context.get('email_cc', [])
+        email_bcc = case.get_bcc_emails() + context.get('email_bcc', [])
         emails = self.filter_mails(emails, emailfrom, case)
         email_cc = self.filter_mails(
             email_cc, emailfrom, case, todel_emails=emails)
         email_bcc = self.filter_mails(
             email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
+
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
