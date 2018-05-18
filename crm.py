@@ -176,6 +176,57 @@ class CrmCase(osv.osv):
                 cursor, uid, [case_id], vals, context=context
             )
 
+    def remove_from_watchers(
+            self, cursor, uid, case_ids, address_ids, bcc=False,
+            context=None):
+        """
+        ADD the addresses to the watchers
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :param case_ids:    CRM.Case IDS to update
+        :param address_ids: Res.Partner.Address IDS to ADD
+        :param bcc:         If should be added to BCC (True) or CC (False)
+        :type bcc:          bool
+        :param context:     OpenERP Context
+        :return:
+        """
+        if context is None:
+            context = {}
+        if not isinstance(case_ids, (tuple, list)):
+            case_ids = [case_ids]
+        if not isinstance(address_ids, (tuple, list)):
+            address_ids = [address_ids]
+        case_obj = self.pool.get('crm.case')
+        addr_obj = self.pool.get('res.partner.address')
+        # Get Field Name according to BCC parameter
+        fieldname = '{}_address_ids'.format(
+            'bcc' if bcc else 'cc'
+        )
+        # Add the addresses to each case in IDS parameter
+        for case_id in case_ids:
+            case_addrs = case_obj.read(
+                cursor, uid, [case_id], [fieldname], context=context
+            )[0][fieldname]
+            # OpenERP relations with name reads as `(id, name)`
+            #   We only want the IDs
+            case_addrs = [c[0] for c in case_addrs]
+            # One2Many and Many2Many may be updated (written) with "[(6,0,ids)]"
+            new_addrs = [(6, 0, list(set(case_addrs) - set(address_ids)))]
+
+            update_str = self._onchange_address_ids(
+                cursor, uid, [case_id],
+                addr_type=('bcc' if bcc else 'cc'),
+                addr_ids=new_addrs,
+                context=context
+            )
+            vals = {
+                fieldname: new_addrs,
+            }
+            vals.update(update_str['value'])
+            case_obj.write(
+                cursor, uid, [case_id], vals, context=context
+            )
+
     def autowatch(self, cursor, uid, ids, context=None):
         if context is None:
             context = {}
@@ -195,8 +246,6 @@ class CrmCase(osv.osv):
         self.add_to_watchers(
             cursor, uid, ids, [user.address_id.id], bcc, context
         )
-
-
 
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
