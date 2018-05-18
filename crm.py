@@ -158,7 +158,9 @@ class CrmCase(osv.osv):
             )[0][fieldname]
             # OpenERP relations with name reads as `(id, name)`
             #   We only want the IDs
-            case_addrs = [c[0] for c in case_addrs]
+            case_addrs = [
+                c[0] if isinstance(c, (tuple, list)) else c
+                for c in case_addrs]
             # One2Many and Many2Many may be updated (written) with "[(6,0,ids)]"
             new_addrs = [(6, 0, case_addrs + address_ids)]
 
@@ -245,6 +247,14 @@ class CrmCase(osv.osv):
             )
         self.add_to_watchers(
             cursor, uid, ids, [user.address_id.id], bcc, context
+        )
+
+    def autoassign(self, cursor, uid, ids, context=None):
+        super(CrmCase, self).autoassign(
+            cursor, uid, ids, context=context
+        )
+        self.autowatch(
+            cursor, uid, ids, context=context
         )
 
     def email_send(self, cursor, uid, case, emails, body, context=None):
