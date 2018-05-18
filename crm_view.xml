@@ -7,29 +7,40 @@
             <field name="type">form</field>
             <field name="inherit_id" ref="crm.crm_case-view" />
             <field name="arch" type="xml">
+                <xpath expr="//button[@name='autoassign']" position="replace">
+                    <group colspan="1" col="1">"
+                        <button name="autoassign" string="Assign to me" type="object"/>
+                        <button name="autowatch" string="Watch this case" type="object"/>
+                    </group>
+                </xpath>
             	<page string="History" position="before">
             		<page string="Conversations">
             			<field name="conversation_mails" nolabel="1" colspan="4" />
             		</page>
                     <page string="Watchers">
-                        <field name="email_cc" colspan="4"/>
-                        <field name="cc_address_ids" mode="tree,form" colspan="4"
-                               on_change="_onchange_address_ids('cc', cc_address_ids)">
-                            <tree>
-                                <field name="partner_id"/>
-                                <field name="name"/>
-                                <field name="email"/>
-                            </tree>
-                        </field>
-                        <field name="email_bcc" colspan="4"/>
-                        <field name="bcc_address_ids" mode="tree,form" colspan="4"
-                               on_change="_onchange_address_ids('bcc', bcc_address_ids)">
-                            <tree>
-                                <field name="partner_id"/>
-                                <field name="name"/>
-                                <field name="email"/>
-                            </tree>
-                        </field>
+                        <group colspan="2" string="Watchers Addresses (CC)">
+                            <field name="email_cc" nolabel="1" colspan="4"/>
+                            <field name="cc_address_ids" nolabel="1" mode="tree,form"
+                                   on_change="_onchange_address_ids('cc', cc_address_ids)"
+                                    colspan="4" height="300">
+                                <tree>
+                                    <field name="partner_id"/>
+                                    <field name="name"/>
+                                    <field name="email"/>
+                                </tree>
+                            </field>
+                        </group>
+                        <group colspan="2"  string="Secret Watchers Addresses (BCC)">
+                            <field name="email_bcc" nolabel="1" colspan="4"/>
+                            <field name="bcc_address_ids" mode="tree,form" nolabel="1"
+                                   on_change="_onchange_address_ids('bcc', bcc_address_ids)">
+                                <tree>
+                                    <field name="partner_id"/>
+                                    <field name="name"/>
+                                    <field name="email"/>
+                                </tree>
+                            </field>
+                        </group>
                     </page>
             	</page>
             </field>
