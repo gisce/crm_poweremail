@@ -18,29 +18,27 @@
             			<field name="conversation_mails" nolabel="1" colspan="4" />
             		</page>
                     <page string="Watchers">
-                        <group colspan="2" string="Watchers Addresses (CC)">
-                            <field name="email_cc" nolabel="1" colspan="4"/>
-                            <field name="cc_address_ids" nolabel="1" mode="tree,form"
-                                   on_change="_onchange_address_ids('cc', cc_address_ids)"
-                                    colspan="4" height="300">
-                                <tree>
-                                    <field name="partner_id"/>
-                                    <field name="name"/>
-                                    <field name="email"/>
-                                </tree>
-                            </field>
-                        </group>
-                        <group colspan="2"  string="Secret Watchers Addresses (BCC)">
-                            <field name="email_bcc" nolabel="1" colspan="4"/>
-                            <field name="bcc_address_ids" mode="tree,form" nolabel="1"
-                                   on_change="_onchange_address_ids('bcc', bcc_address_ids)">
-                                <tree>
-                                    <field name="partner_id"/>
-                                    <field name="name"/>
-                                    <field name="email"/>
-                                </tree>
-                            </field>
-                        </group>
+                        <separator colspan="4" string="Watchers Addresses (CC)"/>
+                        <field name="email_cc" nolabel="1" colspan="4"/>
+                        <field name="cc_address_ids" nolabel="1" mode="tree,form"
+                               on_change="_onchange_address_ids('cc', cc_address_ids)"
+                                colspan="4">
+                            <tree>
+                                <field name="partner_id"/>
+                                <field name="name"/>
+                                <field name="email"/>
+                            </tree>
+                        </field>
+                        <separator colspan="4"  string="Secret Watchers Addresses (BCC)"/>
+                        <field name="email_bcc" nolabel="1" colspan="4"/>
+                        <field name="bcc_address_ids" mode="tree,form" nolabel="1"
+                               on_change="_onchange_address_ids('bcc', bcc_address_ids)">
+                            <tree>
+                                <field name="partner_id"/>
+                                <field name="name"/>
+                                <field name="email"/>
+                            </tree>
+                        </field>
                     </page>
             	</page>
             </field>
