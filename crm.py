@@ -150,7 +150,6 @@ class CrmCase(osv.osv):
             context = {}
         pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
-        body = self.format_mail(case, body)
         if (case.user_id and case.user_id.address_id
                 and case.user_id.address_id.email):
             emailfrom = case.user_id.address_id.email
@@ -183,13 +182,15 @@ class CrmCase(osv.osv):
             'pem_to': ', '.join(set(emails)),
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
             'pem_body_text': body,
+            'pem_body_html': body,
             'pem_account_id': pem_account_id[0],
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
             'conversation_id': case.conversation_id.id,
             'pem_cc': ', '.join(set(email_cc)),
-            'pem_bcc': ', '.join(set(email_bcc))
+            'pem_bcc': ', '.join(set(email_bcc)),
+            'reference': 'crm.case,{}'.format(case.id),
         })
         return True
 
