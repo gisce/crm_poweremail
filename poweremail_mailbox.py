@@ -215,7 +215,10 @@ class PoweremailMailboxCRM(osv.osv):
         mailbox_obj = self.pool.get('poweremail.mailbox')
         email_from = case.section_id.reply_to
         email_to = case_obj.filter_emails(
-            case.get_cc_emails(),
+            (
+                case.get_cc_emails() +
+                [case.user_id.address_id.email, case.partner_address_id.email]
+            ),
             email.from_.address,
             case,
             todel_emails=email.recipients.addresses+[case.section_id.reply_to]
@@ -235,8 +238,8 @@ class PoweremailMailboxCRM(osv.osv):
             vals_forward = {
                 'pem_to': email_to[0],
                 'pem_from': email_from,
-                'pem_cc': email_to[1:] if len(email_to[1:]) else False,
-                'pem_bcc': email_bcc,
+                'pem_cc': ','.join(email_to[1:]) if len(email_to[1:]) else '',
+                'pem_bcc': ','.join(email_bcc) if email_bcc else '',
                 'pem_subject': p_mail.pem_subject,
                 'pem_body_text': p_mail.pem_body_text,
                 'pem_body_html': p_mail.pem_body_html,
@@ -248,6 +251,23 @@ class PoweremailMailboxCRM(osv.osv):
                 'conversation_id': case.conversation_id.id,
             }
             mailbox_obj.create(cursor, uid, vals_forward, context=context)
+        elif email_bcc:
+            p_mail = self.browse(cursor, uid, pmail_id, context=context)
+            for bcc in email_bcc:
+                vals_forward = {
+                    'pem_to': bcc,
+                    'pem_from': email_from,
+                    'pem_subject': p_mail.pem_subject,
+                    'pem_body_text': p_mail.pem_body_text,
+                    'pem_body_html': p_mail.pem_body_html,
+                    'pem_folder': 'outbox',
+                    'pem_account_id': p_mail.pem_account_id.id,
+                    'mail_type': 'multipart/alternative',
+                    'date_mail': datetime.now().strftime('%Y-%m-%d'),
+                    'pem_message_id': p_mail.pem_message_id,
+                    'conversation_id': case.conversation_id.id,
+                }
+                mailbox_obj.create(cursor, uid, vals_forward, context=context)
 
     def create(self, cursor, uid, vals, context=None):
         """If some crm section reply_to has this pem_account create a CRM Case.
