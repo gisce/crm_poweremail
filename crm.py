@@ -292,6 +292,17 @@ class CrmCaseRule(osv.osv):
     }
     
     def get_email_addresses(self, cr, uid, rule_id, case, context):
+        """
+        Override CRM.Case get_email_addresses
+        IF the current rule (action) uses a template, update the context
+        with the Template addresses (TO, CC, BCC)
+        :param cr:      OpenERP Cursor
+        :param uid:     OpenERP User ID
+        :param rule_id: OpenERP action (Crm.Case.Rule) ID
+        :param case:    OpenERP case (Crm.Case) browse record
+        :param context: OpenERP Context
+        :return:        All case-related addresses to CC the email
+        """
         if isinstance(rule_id, list):
             rule_id = rule_id[0]
         emails = super(CrmCaseRule, self).get_email_addresses(
@@ -330,6 +341,17 @@ class CrmCaseRule(osv.osv):
         return list(set(emails))
 
     def get_email_body(self, cr, uid, rule_id, case, context=None):
+        """
+        Override CRM.Case get_email_body
+        Gets the body from the template on the rule and renders it with the
+        case values, updating the context language with the case language
+        :param cr:      OpenERP Cursor
+        :param uid:     OpenERP User ID
+        :param rule_id: OpenERP action (Crm.Case.Rule) ID
+        :param case:    OpenERP case (Crm.Case) browse record
+        :param context: OpenERP Context
+        :return:        The rendered body for the template referenced on the rule
+        """
         if not context:
             context = {}
         if isinstance(rule_id, list):
