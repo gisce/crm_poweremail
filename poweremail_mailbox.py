@@ -110,8 +110,8 @@ class PoweremailMailboxCRM(osv.osv):
             })
         return case_obj.create(cursor, uid, case_vals, context)
 
-    def update_from_mail(
-            self, cursor, uid, case_id, p_mail, email, context=None):
+    def update_case_from_mail(
+            self, cursor, uid, p_mail_id, case_id, email, context=None):
         """
         Update the case with the data from the poweremail and the email
 
@@ -119,18 +119,21 @@ class PoweremailMailboxCRM(osv.osv):
         2. Log (History)
         3. Addresses (Watchers CC)
 
-        :param cursor:
-        :param uid:
-        :param case_id:
-        :param p_mail:
-        :param email:
-        :param context:
+        :param cursor:      OpenERP Cursor
+        :param uid:         Res.User ID
+        :param p_mail_id:   Poweremail.Mailbox ID
+        :param case_id:     Crm.Case ID
+        :param email:       Qreu.Email instance (related to the mailbox ID)
+        :param context:     OpenERP Context
         :return:
         """
         if context is None:
             context = {}
+        if isinstance(p_mail_id, (list, tuple)):
+            p_mail_id = p_mail_id[0]
         if isinstance(case_id, (list, tuple)):
             case_id = case_id[0]
+        p_mail = self.browse(cursor, uid, p_mail_id, context=context)
         case_obj = self.pool.get('crm.case')
 
         # 1.- Description
@@ -197,7 +200,8 @@ class PoweremailMailboxCRM(osv.osv):
     def forward_case_response(
             self, cursor, uid, pmail_id, case, email, context=None):
         """
-
+        Make a forwarding poweremail.mailbox with all the recipients from the
+        case, excluding those in the shared email
         :param cursor:      OpenERP Cursor
         :param uid:         OpenERP User ID
         :param pmail_id:    Poweremail.Mailbox ID
@@ -288,15 +292,15 @@ class PoweremailMailboxCRM(osv.osv):
                     cursor, uid, p_mail.id, section_id, body_text=body_text
                 )
             else:
-                self.update_from_mail(
-                    cursor, uid, case_id, p_mail, mail, context=context
+                self.update_case_from_mail(
+                    cursor, uid, p_mail.id, case_id, mail, context=context
                 )
                 case = case_obj.browse(cursor, uid, case_id[0], context=context)
                 self.forward_case_response(
-                    cursor, uid, case, mail, context=context
+                    cursor, uid, p_mail.id, case, mail, context=context
                 )
 
         return res_id
 
- 
+
 PoweremailMailboxCRM()
