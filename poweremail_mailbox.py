@@ -194,6 +194,56 @@ class PoweremailMailboxCRM(osv.osv):
             }, context=context
         )
 
+    def forward_case_response(
+            self, cursor, uid, pmail_id, case, email, context=None):
+        """
+
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :param pmail_id:    Poweremail.Mailbox ID
+        :param case:        Browse Record
+        :param email:       Qreu.Email instance
+        :param context:     OpenERP Context
+        :return:
+        """
+        case_obj = self.pool.get('crm.case')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        email_from = case.section_id.reply_to
+        email_to = case_obj.filter_emails(
+            case.get_cc_emails(),
+            email.from_.address,
+            case,
+            todel_emails=email.recipients.addresses+[case.section_id.reply_to]
+        )
+        email_bcc = case_obj.filter_emails(
+            case.get_bcc_emails(),
+            email.from_.address,
+            case,
+            todel_emails=(
+                email.recipients.addresses +
+                [case.section_id.reply_to] +
+                email_to
+            )
+        )
+        if email_to:
+            p_mail = self.browse(cursor, uid, pmail_id, context=context)
+            vals_forward = {
+                'pem_to': email_to[0],
+                'pem_from': email_from,
+                'pem_cc': email_to[1:] if len(email_to[1:]) else False,
+                'pem_bcc': email_bcc,
+                'pem_subject': p_mail.pem_subject,
+                'pem_body_text': p_mail.pem_body_text,
+                'pem_body_html': p_mail.pem_body_html,
+                'pem_folder': 'outbox',
+                'pem_account_id': p_mail.pem_account_id.id,
+                'mail_type': 'multipart/alternative',
+                'date_mail': datetime.now().strftime('%Y-%m-%d'),
+                'pem_message_id': p_mail.pem_message_id,
+                'conversation_id': case.conversation_id.id,
+            }
+            mailbox_obj.create(cursor, uid, vals_forward, context=context)
+
     def create(self, cursor, uid, vals, context=None):
         """If some crm section reply_to has this pem_account create a CRM Case.
         """
@@ -242,44 +292,11 @@ class PoweremailMailboxCRM(osv.osv):
                     cursor, uid, case_id, p_mail, mail, context=context
                 )
                 case = case_obj.browse(cursor, uid, case_id[0], context=context)
-                # After crm.case update,
-                # Forward the e-mail to case TO, FROM, CCs or BCCs
-                # if not in e-mail recipients
-                email_from = section.reply_to
-                email_to = []
-                email_bcc = []
-                if case.email_from not in reply_to:
-                    email_to.append(case.email_from)
-                if case.partner_address_id.email not in reply_to:
-                    email_to.append(case.partner_address_id.email)
-                for cc_email in case.email_cc.split(','):
-                    cc = cc_email.strip()
-                    if cc not in reply_to:
-                        email_to.append(cc)
-                for bcc_email in case.email_bcc.split(','):
-                    bcc = bcc_email.strip()
-                    if bcc not in email_to:
-                        email_bcc.append(bcc)
-                if email_to:
-                    email_to = list(set(email_to))
-                    mailbox_obj = self.pool.get('poweremail.mailbox')
-                    vals_forward = {}
-                    vals_forward.update({
-                        'pem_to': email_to[0],
-                        'pem_from': email_from,
-                        'pem_cc': email_to[1:] if len(email_to[1:]) else False,
-                        'pem_bcc': email_bcc,
-                        'pem_subject': p_mail.pem_subject,
-                        'pem_body_text': p_mail.pem_body_text,
-                        'pem_body_html': p_mail.pem_body_html,
-                        'pem_folder': 'outbox',
-                        'pem_account_id': p_mail.pem_account_id.id,
-                        'mail_type': 'multipart/alternative',
-                        'date_mail': datetime.now().strftime('%Y-%m-%d'),
-                        'pem_message_id': make_msgid('tinycrm-%s' % case.id),
-                        'conversation_id': case.conversation_id.id,
-                    })
-                    mailbox_obj.create(cursor, uid, vals_forward)
+                self.forward_case_response(
+                    cursor, uid, case, mail, context=context
+                )
+
         return res_id
+
  
 PoweremailMailboxCRM()
