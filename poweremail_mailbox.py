@@ -135,6 +135,7 @@ class PoweremailMailboxCRM(osv.osv):
             case_id = case_id[0]
         p_mail = self.browse(cursor, uid, p_mail_id, context=context)
         case_obj = self.pool.get('crm.case')
+        section_obj = self.pool.get('crm.case.section')
 
         # 1.- Description
         old_descr = case_obj.read(
@@ -161,13 +162,16 @@ class PoweremailMailboxCRM(osv.osv):
         # 3.- Addresses
         case_data = case_obj.read(
             cursor, uid, case_id, [
-                'email_cc', 'reply_to'
+                'email_cc', 'section_id'
             ], context=context
         )
+        reply_to = section_obj.read(
+            cursor, uid, case_data['section_id'], ['reply_to']
+        )[0]['reply_to']
         # Emails from CC
         emails_from_mail = []
         for address in email.cc:
-            if address.address in case_data['reply_to']:
+            if address.address in reply_to:
                 continue
             if address.address not in case_data['email_cc']:
                 emails_from_mail.append('{} <{}>'.format(
@@ -175,7 +179,7 @@ class PoweremailMailboxCRM(osv.osv):
                 ).strip())
         # Emails from TO
         for address in email.to:
-            if address.address in case_data['reply_to']:
+            if address.address in reply_to:
                 continue
             if address.address not in case_data['email_cc']:
                 emails_from_mail.append('{} <{}>'.format(
