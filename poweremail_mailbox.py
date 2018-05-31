@@ -166,35 +166,32 @@ class PoweremailMailboxCRM(osv.osv):
             ], context=context
         )
         reply_to = section_obj.read(
-            cursor, uid, case_data['section_id'], ['reply_to']
-        )[0]['reply_to']
+            cursor, uid, case_data['section_id'][0], ['reply_to']
+        )['reply_to']
         # Emails from CC
         emails_from_mail = []
         for address in email.cc:
-            if address.address in reply_to:
+            if reply_to in address:
                 continue
-            if address.address not in case_data['email_cc']:
-                emails_from_mail.append('{} <{}>'.format(
-                    address.display_name, address.address
-                ).strip())
+            if address not in case_data['email_cc']:
+                emails_from_mail.append(address.strip())
         # Emails from TO
         for address in email.to:
-            if address.address in reply_to:
+            if reply_to in address:
                 continue
-            if address.address not in case_data['email_cc']:
-                emails_from_mail.append('{} <{}>'.format(
-                    address.display_name, address.address
-                ).strip())
+            if address not in case_data['email_cc']:
+                emails_from_mail.append(address.strip())
         # Email from FROM
         if (
-            email.from_.address not in case_data['reply_to'] and
+            reply_to not in email.from_.address and
             email.from_.address not in case_data['email_cc']
         ):
             emails_from_mail.append('{} <{}>'.format(
                 email.from_.display_name, email.from_.address
             ).strip())
         # Add all addresses to the CC if they are not in there
-        emails_from_mail = list(set(case_data['email_cc'] + emails_from_mail))
+        emails_from_mail = u','.join(list(set(
+            case_data['email_cc'].split(',') + emails_from_mail)))
         case_obj.write(
             cursor, uid, [case_id], {
                 'email_cc': emails_from_mail
