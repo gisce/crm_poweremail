@@ -110,6 +110,90 @@ class PoweremailMailboxCRM(osv.osv):
             })
         return case_obj.create(cursor, uid, case_vals, context)
 
+    def update_from_mail(
+            self, cursor, uid, case_id, p_mail, email, context=None):
+        """
+        Update the case with the data from the poweremail and the email
+
+        1. Description (History)
+        2. Log (History)
+        3. Addresses (Watchers CC)
+
+        :param cursor:
+        :param uid:
+        :param case_id:
+        :param p_mail:
+        :param email:
+        :param context:
+        :return:
+        """
+        if context is None:
+            context = {}
+        if isinstance(case_id, (list, tuple)):
+            case_id = case_id[0]
+        case_obj = self.pool.get('crm.case')
+
+        # 1.- Description
+        old_descr = case_obj.read(
+            cursor, uid, case_id, ['description']
+        )['description']
+        if old_descr:
+            case_obj._history(
+                cursor, uid,
+                case_obj.browse(cursor, uid, [case_id]),
+                _('Reply'), history=True,
+                email=email.from_.address
+            )
+        body_text = quotations.extract_from_plain(p_mail.pem_body_text)
+        case_obj.write(cursor, uid, case_id, {
+            'description': body_text
+        })
+
+        # 2.- Logs
+        case_obj._history(
+            cursor, uid, case_obj.browse(cursor, uid, [case_id]),
+            _('Reply'), history=True, email=email.from_.address
+        )
+
+        # 3.- Addresses
+        case_data = case_obj.read(
+            cursor, uid, case_id, [
+                'email_cc', 'reply_to'
+            ], context=context
+        )
+        # Emails from CC
+        emails_from_mail = []
+        for address in email.cc:
+            if address.address in case_data['reply_to']:
+                continue
+            if address.address not in case_data['email_cc']:
+                emails_from_mail.append('{} <{}>'.format(
+                    address.display_name, address.address
+                ).strip())
+        # Emails from TO
+        for address in email.to:
+            if address.address in case_data['reply_to']:
+                continue
+            if address.address not in case_data['email_cc']:
+                emails_from_mail.append('{} <{}>'.format(
+                    address.display_name, address.address
+                ).strip())
+        # Email from FROM
+        if (
+            email.from_.address not in case_data['reply_to'] and
+            email.from_.address not in case_data['email_cc']
+        ):
+            emails_from_mail.append('{} <{}>'.format(
+                email.from_.display_name, email.from_.address
+            ).strip())
+        # Add all addresses to the CC if they are not in there
+        emails_from_mail = list(set(case_data['email_cc'] + emails_from_mail))
+        case_obj.write(
+            cursor, uid, [case_id], {
+                'email_cc': emails_from_mail
+            }, context=context
+        )
+
     def create(self, cursor, uid, vals, context=None):
         """If some crm section reply_to has this pem_account create a CRM Case.
         """
@@ -149,30 +233,15 @@ class PoweremailMailboxCRM(osv.osv):
             ])
             if not case_id:
                 # If not found a conversation, add new case with email values
+                body_text = quotations.extract_from_plain(p_mail.pem_body_text)
                 case = self.create_crm_case(
                     cursor, uid, p_mail.id, section_id, body_text=body_text
                 )
             else:
-                case_id = case_id[0]
-                old_descr = case_obj.read(
-                    cursor, uid, case_id, ['description']
-                )['description']
-                if old_descr:
-                    cases = case_obj.browse(cursor, uid, [case_id])
-                    case_obj._history(
-                        cursor, uid, cases, _('Reply'), history=True,
-                        email=mail.from_.address
-                    )
-                case_obj.write(cursor, uid, case_id, {
-                    'description': body_text
-                })
-                # Re-browse after write
-                cases = case_obj.browse(cursor, uid, [case_id])
-                case_obj._history(
-                    cursor, uid, cases, _('Reply'), history=True,
-                    email=mail.from_.address
+                self.update_from_mail(
+                    cursor, uid, case_id, p_mail, mail, context=context
                 )
-                case = cases[0]
+                case = case_obj.browse(cursor, uid, case_id[0], context=context)
                 # After crm.case update,
                 # Forward the e-mail to case TO, FROM, CCs or BCCs
                 # if not in e-mail recipients
