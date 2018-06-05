@@ -103,6 +103,8 @@ class CrmCase(osv.osv):
         :return:            List of emails used as CC
         :rtype:             list[str]
         """
+        if context is None:
+            context = {}
         if isinstance(case_id, (list, tuple)):
             case_id = case_id[0]
         emails = super(CrmCase, self).get_cc_emails(
@@ -124,6 +126,8 @@ class CrmCase(osv.osv):
         :return:            List of emails used as CC
         :rtype:             list[str]
         """
+        if context is None:
+            context = {}
         if isinstance(case_id, (list, tuple)):
             case_id = case_id[0]
         watchers_bcc = self.read(
