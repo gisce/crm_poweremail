@@ -154,7 +154,6 @@ class CrmCase(osv.osv):
             context = {}
         pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
-        body = self.format_mail(case, body)
         if (case.user_id and case.user_id.address_id
                 and case.user_id.address_id.email):
             emailfrom = case.user_id.address_id.email
@@ -187,13 +186,15 @@ class CrmCase(osv.osv):
             'pem_to': ', '.join(set(emails)),
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
             'pem_body_text': body,
+            'pem_body_html': body,
             'pem_account_id': pem_account_id[0],
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
             'conversation_id': case.conversation_id.id,
             'pem_cc': ', '.join(set(email_cc)),
-            'pem_bcc': ', '.join(set(email_bcc))
+            'pem_bcc': ', '.join(set(email_bcc)),
+            'reference': 'crm.case,{}'.format(case.id),
         })
         return True
 
@@ -295,6 +296,17 @@ class CrmCaseRule(osv.osv):
     }
     
     def get_email_addresses(self, cr, uid, rule_id, case, context):
+        """
+        Override CRM.Case get_email_addresses
+        IF the current rule (action) uses a template, update the context
+        with the Template addresses (TO, CC, BCC)
+        :param cr:      OpenERP Cursor
+        :param uid:     OpenERP User ID
+        :param rule_id: OpenERP action (Crm.Case.Rule) ID
+        :param case:    OpenERP case (Crm.Case) browse record
+        :param context: OpenERP Context
+        :return:        All case-related addresses to CC the email
+        """
         if isinstance(rule_id, list):
             rule_id = rule_id[0]
         emails = super(CrmCaseRule, self).get_email_addresses(
@@ -333,6 +345,17 @@ class CrmCaseRule(osv.osv):
         return list(set(emails))
 
     def get_email_body(self, cr, uid, rule_id, case, context=None):
+        """
+        Override CRM.Case get_email_body
+        Gets the body from the template on the rule and renders it with the
+        case values, updating the context language with the case language
+        :param cr:      OpenERP Cursor
+        :param uid:     OpenERP User ID
+        :param rule_id: OpenERP action (Crm.Case.Rule) ID
+        :param case:    OpenERP case (Crm.Case) browse record
+        :param context: OpenERP Context
+        :return:        The rendered body for the template referenced on the rule
+        """
         if not context:
             context = {}
         if isinstance(rule_id, list):
