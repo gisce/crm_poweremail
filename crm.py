@@ -396,6 +396,23 @@ class CrmCase(osv.osv):
             else:
                 res[case.id] = [x.id for x in case.conversation_id.mails]
         return res
+
+    def get_case_related_attachments(self, cursor, uid, ids, field_name, args,
+                                     context=None):
+        if context is None:
+            context = {}
+        attach_ids = {}
+        pwm_obj = self.pool.get('poweremail.mailbox')
+        for case in self.read(
+            cursor, uid, ids, ['conversation_mails'], context=context
+        ):
+            attach_ids[case['id']] = []
+            # Get attachments from all emails
+            for email in case['conversation_mails']:
+                attach_ids[case['id']] += pwm_obj.read(cursor, uid, email[0], [
+                    'attachment_ids'
+                ], context=context)['attachment_ids']
+        return attach_ids
     
     _columns = {
         'conversation_id': fields.many2one(
@@ -419,7 +436,12 @@ class CrmCase(osv.osv):
             id1='case_id', id2='address_id',
             string='Secret Watchers Addresses (BCC)'
         ),
+        'attachment_ids': fields.function(
+            get_case_related_attachments, type='one2many', obj='ir.attachment',
+            string='Adjuntos relacionados', method=True
+        )
     }
+
 
 CrmCase()
 

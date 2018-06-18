@@ -40,6 +40,15 @@
                             </tree>
                         </field>
                     </page>
+                    <page string="Case-Related Attachments">
+                        <field name="attachment_ids" nolabel="1">
+                            <tree>
+                                <field name="datas_fname"/>
+                                <field name="create_date"/>
+                                <field name="associated_object"/>
+                            </tree>
+                        </field>
+                    </page>
             	</page>
             </field>
         </record>
