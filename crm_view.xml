@@ -52,6 +52,7 @@
             	</page>
             </field>
         </record>
+
 		<record id="crm_case_rule-pmail-view" model="ir.ui.view">
             <field name="name">crm.case.rule.form</field>
             <field name="model">crm.case.rule</field>
@@ -80,6 +81,23 @@
                     <field name="pm_template_id"/>
                 </field>
             </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_sc_link_case_emails">
+            <field name="name">Conversation Emails</field>
+            <field name="res_model">poweremail.mailbox</field>
+            <field name="src_model">crm.case</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('id', 'in', conversation_mails)]</field>
+        </record>
+        <record id="value_action_sc_link_case_emails" model="ir.values">
+            <field name="object" eval="1"/>
+            <field name="name">Conversation Emails</field>
+            <field name="key2">client_action_relate</field>
+            <field name="key">action</field>
+            <field name="model">crm.case</field>
+            <field name="value" eval="'ir.actions.act_window,'+str(ref('action_sc_link_case_emails'))" />
         </record>
 	</data>
 </openerp>
