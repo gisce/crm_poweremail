@@ -293,7 +293,6 @@ class PoweremailMailboxCRM(osv.osv):
         search_params = [('reply_to', 'in', reply_to)]
         section_id = section_obj.search(cursor, uid, search_params)
         if section_id:
-            body_text = quotations.extract_from_plain(p_mail.pem_body_text)
             section_id = section_id[0]
             section = section_obj.browse(cursor, uid, section_id)
             if mail.from_.address == section.reply_to:
