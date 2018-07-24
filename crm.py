@@ -3,6 +3,7 @@ from datetime import datetime
 from email.utils import make_msgid
 from mako.template import Template
 
+from markdown import markdown
 from osv import osv, fields
 from tools.translate import _
 from tools import config
@@ -326,7 +327,7 @@ class CrmCase(osv.osv):
             'pem_to': ', '.join(set(emails)),
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
             'pem_body_text': body,
-            'pem_body_html': body,
+            'pem_body_html': markdown(body),
             'pem_account_id': pem_account_id[0],
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
