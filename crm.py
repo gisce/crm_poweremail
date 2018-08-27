@@ -270,9 +270,9 @@ class CrmCase(osv.osv):
             context = {}
         if isinstance(case_id, (list, tuple)):
             case_id = case_id[0]
-        watchers_bcc = self.read(
+        watchers_bcc = (self.read(
             cursor, uid, [case_id], ['email_bcc'], context=context
-        )[0]['email_bcc'] or []
+        )[0]['email_bcc'] or '').split(', ')
         emails = super(CrmCase, self).get_bcc_emails(
             cursor, uid, case_id, context=context)
         return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
@@ -409,9 +409,9 @@ class CrmCase(osv.osv):
             attach_ids[case['id']] = []
             # Get attachments from all emails
             for email in case['conversation_mails']:
-                attach_ids[case['id']] += pwm_obj.read(cursor, uid, email[0], [
-                    'attachment_ids'
-                ], context=context)['attachment_ids']
+                attach_ids[case['id']] += pwm_obj.read(cursor, uid, email, [
+                    'pem_attachments_ids'
+                ], context=context)['pem_attachments_ids']
         return attach_ids
     
     _columns = {
