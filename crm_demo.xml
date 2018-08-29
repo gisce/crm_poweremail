@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-        <record model="crm.case.rule" id="crm_poweremail_rule_new">
-            <field name="active" eval="False"/>
-        </record>
         <record id="crmpoweremail_pem_account01" model="poweremail.core_accounts">
             <field name="name">Test Account</field>
             <field name="email_id">test@example.com</field>

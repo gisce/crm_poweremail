@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-    <data noupdate="0">
+    <data noupdate="1">
         <!-- CRM Poweremail - Templates -->
         <record model="poweremail.templates" id="crm_poweremail_case_template_new">
             <field name="name">New Case Template</field>
@@ -75,7 +75,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
         <!-- CRM - Rules -->
         <record model="crm.case.rule" id="crm_poweremail_rule_new">
             <field name="name">Poweremail New Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">draft</field>
             <field name="trg_min_history" eval="0"/>
             <field name="trg_max_history_log" eval="1"/>
@@ -84,7 +84,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
         <record model="crm.case.rule" id="crm_poweremail_rule_open">
             <field name="name">Poweremail Open Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">draft</field>
             <field name="trg_state_to">open</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_open"/>
@@ -95,7 +95,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
         <record model="crm.case.rule" id="crm_poweremail_rule_pending">
             <field name="name">Poweremail Pending Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">open</field>
             <field name="trg_state_to">pending</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_pending"/>
@@ -106,7 +106,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
         <record model="crm.case.rule" id="crm_poweremail_rule_close">
             <field name="name">Poweremail Close Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">pending</field>
             <field name="trg_state_to">done</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_close"/>
