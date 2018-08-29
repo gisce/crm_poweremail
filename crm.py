@@ -6,6 +6,7 @@ from mako.template import Template
 from osv import osv, fields
 from tools.translate import _
 from tools import config
+from qreu import address as qaddress
 
 
 class CrmCase(osv.osv):
@@ -13,6 +14,22 @@ class CrmCase(osv.osv):
     """
     _name = 'crm.case'
     _inherit = 'crm.case'
+
+    @staticmethod
+    def filter_mails(emails, email_from, case, todel_emails=[]):
+        emails = super(CrmCase).filter_mails(
+            emails, email_from, case, todel_emails
+        )
+        filtered = []
+        for email in emails:
+            address = qaddress.parse(email)
+            try:
+                ind = [a.address for a in filtered].index(address.address)
+                if not filtered[ind].display_name and address.display_name:
+                    filtered[ind] = address
+            except ValueError:
+                filtered.append(address)
+        return filtered
 
     def _onchange_address_ids(
             self, cursor, uid, ids,
