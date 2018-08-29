@@ -403,16 +403,15 @@ class CrmCase(osv.osv):
         if context is None:
             context = {}
         attach_ids = {}
-        pwm_obj = self.pool.get('poweremail.mailbox')
+        attach_obj = self.pool.get('ir.attachment')
         for case in self.read(
             cursor, uid, ids, ['conversation_mails'], context=context
         ):
-            attach_ids[case['id']] = []
             # Get attachments from all emails
-            for email in case['conversation_mails']:
-                attach_ids[case['id']] += pwm_obj.read(cursor, uid, email, [
-                    'pem_attachments_ids'
-                ], context=context)['pem_attachments_ids']
+            attach_ids[case['id']] = attach_obj.search(cursor, uid, [
+                ('res_model', '=', 'poweremail.mailbox'),
+                ('res_id', 'in', case['conversation_mails'])
+            ])
         return attach_ids
     
     _columns = {
