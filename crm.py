@@ -272,7 +272,7 @@ class CrmCase(osv.osv):
             case_id = case_id[0]
         watchers_bcc = self.read(
             cursor, uid, [case_id], ['email_bcc'], context=context
-        )[0]['email_bcc']
+        )[0]['email_bcc'] or ''
         watchers_bcc = [e.strip() for e in watchers_bcc.split(',') if e]
         emails = super(CrmCase, self).get_bcc_emails(
             cursor, uid, case_id, context=context)
