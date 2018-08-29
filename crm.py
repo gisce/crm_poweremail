@@ -17,18 +17,29 @@ class CrmCase(osv.osv):
 
     @staticmethod
     def filter_mails(emails, email_from, case, todel_emails=[]):
-        emails = super(CrmCase).filter_mails(
-            emails, email_from, case, todel_emails
-        )
+        """Override method from base class"""
         filtered = []
         for email in emails:
-            address = qaddress.parse(email)
-            try:
-                ind = [a.address for a in filtered].index(address.address)
-                if not filtered[ind].display_name and address.display_name:
-                    filtered[ind] = address
-            except ValueError:
-                filtered.append(address)
+            if email == '':                          # Remove EMPTY email
+                continue
+            elif email == email_from:                # Remove FROM email
+                continue
+            elif email == case.section_id.reply_to:  # Remove SECTION email
+                continue
+            else:                                    # Remove duplicated address
+                address = qaddress.parse(email)
+                if address.address in todel_emails:
+                    continue
+                try:
+                    ind = [a.address for a in filtered].index(address.address)
+                    if not filtered[ind].display_name and address.display_name:
+                        filtered[ind] = address
+                except ValueError:
+                    filtered.append(address)
+        filtered = [
+            '{} <{}>'.format(a.display_name, a.address) if a.display_name else a.address
+            for a in filtered
+        ]
         return filtered
 
     def _onchange_address_ids(
