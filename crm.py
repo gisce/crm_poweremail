@@ -111,12 +111,18 @@ class CrmCase(osv.osv):
             case_ids = [case_ids]
         if not isinstance(address_ids, (tuple, list)):
             address_ids = [address_ids]
+        pwmail_obj = self.pool.get('poweremail.mailbox')
         case_obj = self.pool.get('crm.case')
         addr_obj = self.pool.get('res.partner.address')
         # Get Field Name according to BCC parameter
         fieldname = '{}_address_ids'.format(
             'bcc' if bcc else 'cc'
         )
+        # Get address_ids from email address on context
+        if not address_ids and context.get('watcher_email', False):
+            email_addr = context.get('watcher_email', False)
+            address_ids = pwmail_obj.get_partner_address_from_email(
+                cursor, uid, email_addr)
         # Filter addresses that have email
         address_ids = [
             aid['id']
