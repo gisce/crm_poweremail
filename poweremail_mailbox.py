@@ -3,7 +3,7 @@ from osv import osv
 from tools.translate import _
 from talon import quotations
 from datetime import datetime
-from email.utils import make_msgid
+from qreu.address import Address
 
 import qreu
 
@@ -13,6 +13,41 @@ class PoweremailMailboxCRM(osv.osv):
     """
     _name = 'poweremail.mailbox'
     _inherit = 'poweremail.mailbox'
+
+    def get_partner_address_from_email(self, cursor, uid, email_address):
+        """
+        Gets or Creates the 'res.partner.address' from a poweremail_mailbox from
+        :param cursor:      OpenERP Cursor
+        :param uid:         OpenERP User ID
+        :type uid:          int
+        :param email:       Email address
+        :type email:        str
+        :return:            Res.Partner.Address (browsed)
+        :rtype:             osv.osv
+        """
+        address_obj = self.pool.get('res.partner.address')
+        partner_obj = self.pool.get('res.partner')
+        email = Address.parse(email_address)
+        address_id = address_obj.search(cursor, uid, [
+            ('email', 'ilike', email.address)
+        ])
+        if address_id:
+            return address_id[0]
+        else:
+            # If not found: create partner address
+            address_id = address_obj.create(cursor, uid, {
+                'name': email.display_name,
+                'email': email.address,
+            })
+            domain = email.address.split('@')[-1].strip()
+            partner_id = partner_obj.search(
+                cursor, uid, [('domain', '=', domain)]
+            )
+            if partner_id:
+                address_obj.write(
+                    cursor, uid, address_id, {'partner_id': partner_id[0]}
+                )
+        return address_id
 
     def get_partner_address(self, cursor, uid, p_mail_id):
         """
@@ -26,40 +61,12 @@ class PoweremailMailboxCRM(osv.osv):
         :rtype:             osv.osv
         """
         address_obj = self.pool.get('res.partner.address')
-        partner_obj = self.pool.get('res.partner')
         p_mail = self.pool.get('poweremail.mailbox').read(
             cursor, uid, p_mail_id, ['pem_mail_orig', 'pem_from']
         )
         mail = qreu.Email.parse(p_mail['pem_mail_orig'])
-        try:
-            address_id = address_obj.search(cursor, uid, [
-                ('email', '=', mail.from_.address)
-            ])
-        except Exception as err:
-            import logging
-            logging.getLogger('poweremail.mailbox').error(
-                _('Could not parse poweremail_mailbox '
-                  'pem_from address with qreu')
-            )
-            return False
-        if address_id:
-            address_id = address_id[0]
-        else:
-            # If not found: create partner address
-            address_email = mail.from_.address
-            address_name = mail.from_.display_name or address_email
-            address_id = address_obj.create(cursor, uid, {
-                'name': address_name,
-                'email': address_email
-            })
-            domain = address_email.split('@')[-1].strip()
-            partner_id = partner_obj.search(
-                cursor, uid, [('domain', '=', domain)]
-            )
-            if partner_id:
-                address_obj.write(
-                    cursor, uid, address_id, {'partner_id': partner_id[0]}
-                )
+        address_id = self.get_partner_address_from_email(cursor, uid,
+                                                         mail.from_.display)
         return address_obj.browse(cursor, uid, address_id) or False
 
     def create_crm_case(self, cursor, uid, p_mail_id, section_id,
