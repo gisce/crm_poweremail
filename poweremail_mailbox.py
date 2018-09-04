@@ -303,9 +303,11 @@ class PoweremailMailboxCRM(osv.osv):
             ])
             if not case_id:
                 # If not found a conversation, add new case with email values
-                body_text = quotations.extract_from_plain(p_mail.pem_body_text)
+                # body_text = quotations.extract_from_plain(
+                #     p_mail.pem_body_text)
                 case = self.create_crm_case(
-                    cursor, uid, p_mail.id, section_id, body_text=body_text
+                    cursor, uid, p_mail.id, section_id,
+                    body_text=p_mail.pem_body_text
                 )
             else:
                 self.update_case_from_mail(
