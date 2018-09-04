@@ -3,6 +3,7 @@ from datetime import datetime
 from email.utils import make_msgid
 from mako.template import Template
 
+from markdown import markdown
 from osv import osv, fields
 from tools.translate import _
 from tools import config
@@ -318,6 +319,15 @@ class CrmCase(osv.osv):
             cursor, uid, case_id, context=context)
         return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
 
+    def parse_body_markdown(self, html):
+        if (
+                html.strip()[0] != '<' and
+                "<br/>" not in html and
+                "<br>" not in html
+        ):
+            html = markdown(html)
+        return html
+
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
         :param cr:      OpenERP Cursor
@@ -361,13 +371,14 @@ class CrmCase(osv.osv):
             email_cc, emailfrom, case, todel_emails=emails)
         email_bcc = self.filter_mails(
             email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
+        email_html_body = self.parse_body_markdown(body)
 
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
             'pem_body_text': body,
-            'pem_body_html': body,
+            'pem_body_html': email_html_body,
             'pem_account_id': pem_account_id[0],
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
