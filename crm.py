@@ -275,9 +275,21 @@ class CrmCase(osv.osv):
             context = {}
         if isinstance(case_id, (list, tuple)):
             case_id = case_id[0]
-        emails = super(CrmCase, self).get_cc_emails(
+        watchers_cc = super(CrmCase, self).get_cc_emails(
             cursor, uid, case_id, context=context)
-        return list(set(emails+context.get('email_cc', [])))
+        # Ensure Case Responsible and Parner Contact are on CCs
+        case = self.browse(cursor, uid, case_id, context=context)
+        from_email = case.email_from or ''
+        if (
+            case.user_id and case.user_id.address_id
+            and case.user_id.address_id.email
+        ):
+            user_email = case.user_id.address_id.email
+        else:
+            user_email = ''
+        emails = [from_email, user_email]
+
+        return list(set(emails+watchers_cc+context.get('email_cc', [])))
 
     def get_bcc_emails(self, cursor, uid, case_id, context=None):
         """
@@ -339,8 +351,8 @@ class CrmCase(osv.osv):
         ])
         if not pem_account_id:
             raise osv.except_osv(_('Error!'),
-                    _("No E-Mail ID Found in Power Email for this section or "
-                      "missing reply address in section."))
+                    _("Missing Poweremail-Account with Reply-To"
+                      " of the Case Section."))
 
         email_cc = case.get_cc_emails(context=context)
         email_bcc = case.get_bcc_emails(context=context)
