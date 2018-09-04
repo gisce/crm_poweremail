@@ -214,7 +214,7 @@ class PoweremailMailboxCRM(osv.osv):
         case_obj = self.pool.get('crm.case')
         mailbox_obj = self.pool.get('poweremail.mailbox')
         email_from = case.section_id.reply_to
-        email_to = case_obj.filter_emails(
+        email_to = case_obj.filter_mails(
             (
                 case.get_cc_emails() +
                 [case.user_id.address_id.email, case.partner_address_id.email]
@@ -223,7 +223,7 @@ class PoweremailMailboxCRM(osv.osv):
             case,
             todel_emails=email.recipients.addresses+[case.section_id.reply_to]
         )
-        email_bcc = case_obj.filter_emails(
+        email_bcc = case_obj.filter_mails(
             case.get_bcc_emails(),
             email.from_.address,
             case,
@@ -251,7 +251,7 @@ class PoweremailMailboxCRM(osv.osv):
                 'conversation_id': case.conversation_id.id,
             }
             mailbox_obj.create(cursor, uid, vals_forward, context=context)
-        elif email_bcc:
+        if email_bcc:
             p_mail = self.browse(cursor, uid, pmail_id, context=context)
             for bcc in email_bcc:
                 vals_forward = {
@@ -313,6 +313,7 @@ class PoweremailMailboxCRM(osv.osv):
                 self.update_case_from_mail(
                     cursor, uid, p_mail.id, case_id, mail, context=context
                 )
+                # Reread case
                 case = case_obj.browse(cursor, uid, case_id[0], context=context)
                 self.forward_case_response(
                     cursor, uid, p_mail.id, case, mail, context=context

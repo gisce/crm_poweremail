@@ -6,6 +6,7 @@ from mako.template import Template
 from osv import osv, fields
 from tools.translate import _
 from tools import config
+from qreu import address as qaddress
 
 
 class CrmCase(osv.osv):
@@ -13,6 +14,33 @@ class CrmCase(osv.osv):
     """
     _name = 'crm.case'
     _inherit = 'crm.case'
+
+    @staticmethod
+    def filter_mails(emails, email_from, case, todel_emails=[]):
+        """Override method from base class"""
+        filtered = []
+        for email in emails:
+            if email == '':                          # Remove EMPTY email
+                continue
+            elif email == email_from:                # Remove FROM email
+                continue
+            elif email == case.section_id.reply_to:  # Remove SECTION email
+                continue
+            else:                                    # Remove duplicated address
+                address = qaddress.parse(email)
+                if address.address in todel_emails:
+                    continue
+                try:
+                    ind = [a.address for a in filtered].index(address.address)
+                    if not filtered[ind].display_name and address.display_name:
+                        filtered[ind] = address
+                except ValueError:
+                    filtered.append(address)
+        filtered = [
+            '{} <{}>'.format(a.display_name, a.address) if a.display_name else a.address
+            for a in filtered
+        ]
+        return filtered
 
     def _onchange_address_ids(
             self, cursor, uid, ids,
@@ -272,7 +300,8 @@ class CrmCase(osv.osv):
             case_id = case_id[0]
         watchers_bcc = self.read(
             cursor, uid, [case_id], ['email_bcc'], context=context
-        )[0]['email_bcc'] or []
+        )[0]['email_bcc'] or ''
+        watchers_bcc = [e.strip() for e in watchers_bcc.split(',') if e]
         emails = super(CrmCase, self).get_bcc_emails(
             cursor, uid, case_id, context=context)
         return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
@@ -402,16 +431,15 @@ class CrmCase(osv.osv):
         if context is None:
             context = {}
         attach_ids = {}
-        pwm_obj = self.pool.get('poweremail.mailbox')
+        attach_obj = self.pool.get('ir.attachment')
         for case in self.read(
             cursor, uid, ids, ['conversation_mails'], context=context
         ):
-            attach_ids[case['id']] = []
             # Get attachments from all emails
-            for email in case['conversation_mails']:
-                attach_ids[case['id']] += pwm_obj.read(cursor, uid, email[0], [
-                    'attachment_ids'
-                ], context=context)['attachment_ids']
+            attach_ids[case['id']] = attach_obj.search(cursor, uid, [
+                ('res_model', '=', 'poweremail.mailbox'),
+                ('res_id', 'in', case['conversation_mails'])
+            ])
         return attach_ids
     
     _columns = {

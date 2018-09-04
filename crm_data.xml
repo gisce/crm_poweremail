@@ -14,7 +14,8 @@
             <field name="lang" eval="False"/>
             <field name="def_body_text">
 In date ${date_now} we have recieved the case with the subject: ${object.name}
-Case Identifier: #${object.id}
+
+- Case Identifier: #${object.id}
 
 Waiting for a responsible to take over the case.
 
@@ -32,9 +33,9 @@ Waiting for a responsible to take over the case.
             <field name="use_sign" eval="False"/>
             <field name="def_body_text">
 In date ${date_now} the case has been Opened with the subject: ${object.name}
-Case Identifier: #${object.id}
 
-Responsible: ${object.user_id.name} &lt;${object.user_id.address_id.email}&gt;
+- Case Identifier: #${object.id}
+- Responsible: ${object.user_id.name} &lt;${object.user_id.address_id.email}&gt;
 
             </field>
         </record>
@@ -74,7 +75,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
         <!-- CRM - Rules -->
         <record model="crm.case.rule" id="crm_poweremail_rule_new">
             <field name="name">Poweremail New Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">draft</field>
             <field name="trg_min_history" eval="0"/>
             <field name="trg_max_history_log" eval="1"/>
@@ -83,7 +84,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
         <record model="crm.case.rule" id="crm_poweremail_rule_open">
             <field name="name">Poweremail Open Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">draft</field>
             <field name="trg_state_to">open</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_open"/>
@@ -94,7 +95,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
         <record model="crm.case.rule" id="crm_poweremail_rule_pending">
             <field name="name">Poweremail Pending Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">open</field>
             <field name="trg_state_to">pending</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_pending"/>
@@ -105,7 +106,7 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
         <record model="crm.case.rule" id="crm_poweremail_rule_close">
             <field name="name">Poweremail Close Case</field>
-            <field name="active">True</field>
+            <field name="active" eval="False"/>
             <field name="trg_state_from">pending</field>
             <field name="trg_state_to">done</field>
             <field name="pm_template_id" ref="crm_poweremail_case_template_close"/>
