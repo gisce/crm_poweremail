@@ -153,6 +153,9 @@ class CrmCase(osv.osv):
                 cursor, uid, address_ids, ['email'], context=context)
             if aid['email']
         ]
+        # Abort if no ids after filtering
+        if not address_ids:
+            return
         # Add the addresses to each case in IDS parameter
         for case_id in case_ids:
             case_addrs = case_obj.read(
