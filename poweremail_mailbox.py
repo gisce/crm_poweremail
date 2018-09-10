@@ -166,7 +166,7 @@ class PoweremailMailboxCRM(osv.osv):
             _('Reply'), history=True, email=email.from_.address
         )
         # 3.- Emails from CC, TO and FROM
-        case_data = case_obj.read(cursor, uid, [case_id], ['section_id'])
+        case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
         reply_to = section_obj.read(
             cursor, uid, case_data['section_id'][0], ['reply_to']
         )['reply_to']
