@@ -170,7 +170,7 @@ class PoweremailMailboxCRM(osv.osv):
         # 2.5 - If pending set to open again
         if case['state'] == 'pending':
             case_obj.case_open(
-                cursor, uid, [case_id], context=context
+                cursor, uid, [case_id]
             )
         # 3.- Emails from CC, TO and FROM
         case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
