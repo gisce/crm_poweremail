@@ -581,7 +581,11 @@ class CrmCaseRule(osv.osv):
         action_body = super(CrmCaseRule, self).get_email_body(
             cr, uid, rule_id, case, context)
         action_template = self.read(
-            cr, uid, rule_id, ['pm_template_id'])['pm_template_id'][0]
+            cr, uid, rule_id, ['pm_template_id'])['pm_template_id']
+        if not action_template:
+            return action_body
+        else:
+            action_template = action_template[0]
         pm_template_obj = self.pool.get('poweremail.templates')
         pm_template = pm_template_obj.browse(cr, uid, action_template)
         pm_send_wizard_obj = self.pool.get('poweremail.send.wizard')
