@@ -1,11 +1,22 @@
 # -*- coding: utf-8 -*-
 from osv import osv
 from tools.translate import _
+from tools import flatten
 from talon import quotations
 from datetime import datetime
 from qreu.address import Address
+import re
 
 import qreu
+
+
+CASE_ID_RE = re.compile(r"<.*tinycrm-(\\d+)@.*>", re.UNICODE)
+
+
+def get_cases_ids_from_references(references):
+    return list({
+        int(x) for x in flatten([CASE_ID_RE.findall(ref) for ref in references])
+    })
 
 
 class PoweremailMailboxCRM(osv.osv):
@@ -286,25 +297,46 @@ class PoweremailMailboxCRM(osv.osv):
             if mail.from_.address == section.reply_to:
                 # Ignore mails sent FROM this section
                 return res_id
-            case_id = case_obj.search(cursor, uid, [
+
+            cases_ids = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
             ])
-            if not case_id:
-                # If not found a conversation, add new case with email values
-                # body_text = quotations.extract_from_plain(
-                #     p_mail.pem_body_text)
-                case = self.create_crm_case(
-                    cursor, uid, p_mail.id, section_id,
-                    body_text=p_mail.pem_body_text
-                )
-            else:
+
+            if not cases_ids:
+                # Ensure ids from msgid exists in the database
+                references_ids = get_cases_ids_from_references(mail.references)
+                cases_ids = case_obj.search(cursor, uid, [
+                    ('id', 'in', references_ids)
+                ])
+                cases_no_conversation = case_obj.search(cursor, uid, [
+                    ('id', 'in', references_ids),
+                    ('conversation_id', '=', False)
+                ])
+                if cases_no_conversation:
+                    # Assign this conversation to all crm that matches
+                    case_obj.write(cursor, uid, cases_no_conversation, {
+                        'conversation_id': p_mail.conversation_id.id
+                    })
+
+            for case_id in cases_ids:
                 self.update_case_from_mail(
                     cursor, uid, p_mail.id, case_id, mail, context=context
                 )
                 # Reread case
-                case = case_obj.browse(cursor, uid, case_id[0], context=context)
+                case = case_obj.browse(cursor, uid, case_id[0],
+                                       context=context)
                 self.forward_case_response(
                     cursor, uid, p_mail.id, case, mail, context=context
+                )
+                return res_id
+
+            else:
+                # If not found a conversation, add new case with email values
+                # body_text = quotations.extract_from_plain(
+                #     p_mail.pem_body_text)
+                res_id = self.create_crm_case(
+                    cursor, uid, p_mail.id, section_id,
+                    body_text=p_mail.pem_body_text
                 )
 
         return res_id
