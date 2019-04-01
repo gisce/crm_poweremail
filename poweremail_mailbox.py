@@ -144,10 +144,12 @@ class PoweremailMailboxCRM(osv.osv):
         case_obj = self.pool.get('crm.case')
         section_obj = self.pool.get('crm.case.section')
 
+        case = case_obj.read(
+            cursor, uid, case_id, ['description', 'state']
+        )
+
         # 1.- Description
-        old_descr = case_obj.read(
-            cursor, uid, case_id, ['description']
-        )['description']
+        old_descr = case['description']
         if old_descr:
             case_obj._history(
                 cursor, uid,
@@ -165,6 +167,11 @@ class PoweremailMailboxCRM(osv.osv):
             cursor, uid, case_obj.browse(cursor, uid, [case_id]),
             _('Reply'), history=True, email=email.from_.address
         )
+        # 2.5 - If pending or done set to open again
+        if case['state'] in ('pending', 'done'):
+            case_obj.case_open(
+                cursor, uid, [case_id]
+            )
         # 3.- Emails from CC, TO and FROM
         case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
         reply_to = section_obj.read(
