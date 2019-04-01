@@ -167,8 +167,8 @@ class PoweremailMailboxCRM(osv.osv):
             cursor, uid, case_obj.browse(cursor, uid, [case_id]),
             _('Reply'), history=True, email=email.from_.address
         )
-        # 2.5 - If pending set to open again
-        if case['state'] == 'pending':
+        # 2.5 - If pending or done set to open again
+        if case['state'] in ('pending', 'done'):
             case_obj.case_open(
                 cursor, uid, [case_id]
             )
