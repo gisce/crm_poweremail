@@ -14,9 +14,9 @@ CASE_ID_RE = re.compile(r"<.*tinycrm-(\\d+)@.*>", re.UNICODE)
 
 
 def get_cases_ids_from_references(references):
-    return [
+    return list({
         int(x) for x in flatten([CASE_ID_RE.findall(ref) for ref in references])
-    ]
+    })
 
 
 class PoweremailMailboxCRM(osv.osv):
