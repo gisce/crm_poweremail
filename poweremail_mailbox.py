@@ -323,8 +323,7 @@ class PoweremailMailboxCRM(osv.osv):
                     cursor, uid, p_mail.id, case_id, mail, context=context
                 )
                 # Reread case
-                case = case_obj.browse(cursor, uid, case_id[0],
-                                       context=context)
+                case = case_obj.browse(cursor, uid, case_id, context=context)
                 self.forward_case_response(
                     cursor, uid, p_mail.id, case, mail, context=context
                 )
