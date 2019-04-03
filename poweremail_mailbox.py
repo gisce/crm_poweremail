@@ -10,7 +10,7 @@ import re
 import qreu
 
 
-CASE_ID_RE = re.compile(r"<.*tinycrm-(\\d+)@.*>", re.UNICODE)
+CASE_ID_RE = re.compile(r"<.*tinycrm-(\d+)@.*>", re.UNICODE)
 
 
 def get_cases_ids_from_references(references):
