@@ -283,7 +283,7 @@ class PoweremailMailboxCRM(osv.osv):
         # If original format mail, use it
         if p_mail.pem_mail_orig:
             mail = qreu.Email.parse(p_mail.pem_mail_orig)
-            reply_to = mail.recipients.addresses
+            reply_to = [x.lower() for x in mail.recipients.addresses]
         else:
             # If no mail source found, the mail is being sent
             return res_id
