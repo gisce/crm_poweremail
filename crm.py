@@ -348,6 +348,10 @@ class CrmCase(osv.osv):
             context = {}
         pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
+        usr_obj = self.pool.get('res.users')
+        signature = usr_obj.read(
+            cursor, uid, uid, ['signature'], context=context
+        )['signature']
         if (case.user_id and case.user_id.address_id
                 and case.user_id.address_id.email):
             emailfrom = case.user_id.address_id.email
@@ -375,6 +379,9 @@ class CrmCase(osv.osv):
         email_bcc = self.filter_mails(
             email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
         email_html_body = self.parse_body_markdown(body)
+
+        if signature:
+            body = '{0}\n{1}'.format(body, signature)
 
         pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
