@@ -430,6 +430,12 @@ class CrmCase(osv.osv):
                     [x.strip() for x in case.email_cc.split(',')]
                 ))
             body = case.description or ''
+
+            signature = self.pool.get('res.users').read(
+                cursor, uid, uid, ['signature'], context)['signature']
+            if signature:
+                body += '\n' + signature
+
             emailfrom = case.user_id.address_id \
                         and case.user_id.address_id.email or False
             if not emailfrom:
