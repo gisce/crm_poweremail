@@ -25,6 +25,20 @@ class PoweremailMailboxCRM(osv.osv):
     _name = 'poweremail.mailbox'
     _inherit = 'poweremail.mailbox'
 
+
+    def crm_udpate_partner_address(self, cursor, uid, address_id, email):
+        address_obj = self.pool.get('res.partner.address')
+        partner_obj = self.pool.get('res.partner')
+        domain = email.split('@')[-1].strip()
+        partner_id = partner_obj.search(
+            cursor, uid, [('domain', '=', domain)]
+        )
+        if partner_id:
+            address_obj.write(
+                cursor, uid, address_id, {'partner_id': partner_id[0]}
+            )
+
+
     def get_partner_address_from_email(self, cursor, uid, email_address):
         """
         Gets or Creates the 'res.partner.address' from a poweremail_mailbox from
@@ -37,7 +51,6 @@ class PoweremailMailboxCRM(osv.osv):
         :rtype:             osv.osv
         """
         address_obj = self.pool.get('res.partner.address')
-        partner_obj = self.pool.get('res.partner')
         email = Address.parse(email_address)
         address_id = address_obj.search(cursor, uid, [
             ('email', 'ilike', email.address)
@@ -50,14 +63,9 @@ class PoweremailMailboxCRM(osv.osv):
                 'name': email.display_name,
                 'email': email.address,
             })
-            domain = email.address.split('@')[-1].strip()
-            partner_id = partner_obj.search(
-                cursor, uid, [('domain', '=', domain)]
+            self.crm_udpate_partner_address(
+                cursor, uid, address_id, email.address
             )
-            if partner_id:
-                address_obj.write(
-                    cursor, uid, address_id, {'partner_id': partner_id[0]}
-                )
         return address_id
 
     def get_partner_address(self, cursor, uid, p_mail_id):

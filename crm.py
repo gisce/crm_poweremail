@@ -348,6 +348,7 @@ class CrmCase(osv.osv):
             context = {}
         pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
+        attachment_obj = self.pool.get('ir.attachment')
         if (case.user_id and case.user_id.address_id
                 and case.user_id.address_id.email):
             emailfrom = case.user_id.address_id.email
@@ -376,7 +377,7 @@ class CrmCase(osv.osv):
             email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
         email_html_body = self.parse_body_markdown(body)
 
-        pm_mailbox_obj.create(cursor, uid, {
+        pm_mail_id = pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
@@ -391,6 +392,15 @@ class CrmCase(osv.osv):
             'pem_bcc': ', '.join(set(email_bcc)),
             'reference': 'crm.case,{}'.format(case.id),
         })
+
+        attachment_ids = context.get('attachment_ids', [])
+        if attachment_ids:
+            pm_mailbox_obj.write(cursor, uid, [pm_mail_id], {
+                'pem_attachments_ids': [(6, 0, attachment_ids)]
+            })
+            attachment_obj.write(cursor, uid, attachment_ids, {
+                'res_model': pm_mailbox_obj._name, 'res_id': pm_mail_id
+            })
         return True
 
     def remind_user(self, cursor, uid, ids, context=None, attach=False,
@@ -430,12 +440,18 @@ class CrmCase(osv.osv):
                     [x.strip() for x in case.email_cc.split(',')]
                 ))
             body = case.description or ''
+
+            signature = self.pool.get('res.users').read(
+                cursor, uid, uid, ['signature'], context)['signature']
+            if signature:
+                body += '\n' + signature
+
             emailfrom = case.user_id.address_id \
                         and case.user_id.address_id.email or False
             if not emailfrom:
                 raise osv.except_osv(_('Error!'),
                         _("No E-Mail ID Found for your Company address!"))
-            self.email_send(cursor, uid, case, emails, body, context)
+            self.email_send(cursor, uid, case, emails, body, context=context)
         self._history(cursor, uid, cases, _('Send'), history=True, email=False)
         return True
 

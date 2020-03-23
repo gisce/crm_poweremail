@@ -13,6 +13,9 @@
                         <button name="autowatch" string="Watch this case" type="object"/>
                     </group>
                 </xpath>
+                <xpath expr="//button[@name='case_log_reply']" position="replace">
+                    <button name="%(action_wizard_log_reply_attachment_form)d" states="open" string="Send Partner &amp; Historize" type="action"/>
+                </xpath>
                 <!-- Remove old Email_CC -->
                 <xpath expr="//field[@name='email_cc']" position="replace"></xpath>
                 <!-- ADD Watchers -->

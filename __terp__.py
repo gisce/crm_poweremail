@@ -21,6 +21,7 @@
         "crm_demo.xml",
     ],
     "update_xml":[
+        "wizard/wizard_log_reply_with_attachment.xml",
         "crm_view.xml",
         "crm_data.xml",
         "res_partner_view.xml",
