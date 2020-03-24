@@ -377,6 +377,11 @@ class CrmCase(osv.osv):
             email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
         email_html_body = self.parse_body_markdown(body)
 
+        signature = self.pool.get('res.users').read(
+            cursor, uid, uid, ['signature'], context)['signature']
+        if signature:
+            email_html_body = '{}\n-- \n{}'.format(email_html_body, signature)
+
         pm_mail_id = pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
@@ -440,11 +445,6 @@ class CrmCase(osv.osv):
                     [x.strip() for x in case.email_cc.split(',')]
                 ))
             body = case.description or ''
-
-            signature = self.pool.get('res.users').read(
-                cursor, uid, uid, ['signature'], context)['signature']
-            if signature:
-                body += '\n' + signature
 
             emailfrom = case.user_id.address_id \
                         and case.user_id.address_id.email or False
