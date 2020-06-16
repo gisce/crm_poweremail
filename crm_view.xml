@@ -70,6 +70,7 @@
 				<field name="act_email_cc" position="after">
                     <separator colspan="4" string="PowerEmail Template"/>
                     <field colspan="4" name="pm_template_id"/>
+                    <field name="act_forward"/>
                     <field name="act_mail_to_user"/>
                     <field name="act_mail_to_partner"/>
                     <field name="act_mail_to_watchers"/>
