@@ -115,4 +115,11 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
             <field name="act_mail_to_partner" eval="True"/>
         </record>
     </data>
+    <data noupdate="1">
+        <record model="res.config" id="crm_poweremail_max_size_mb" forcecreate="1">
+            <field name="name">crm_poweremail_max_size_mb</field>
+            <field name="value">20</field>
+            <field name="description">Max size of attachments to send attachments</field>
+        </record>
+    </data>
 </openerp>
