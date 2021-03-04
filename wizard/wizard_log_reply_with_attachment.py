@@ -11,8 +11,16 @@ class WizardLogReplyAttachment(osv.osv_memory):
         'case_id': fields.many2one(
             'crm.case', 'CRM case', required=True
         ),
-        'file': fields.binary('File'),
-        'filename': fields.char('Filename', size=512),
+        'file_1': fields.binary('File'),
+        'filename_1': fields.char('Filename', size=512),
+        'file_2': fields.binary('File'),
+        'filename_2': fields.char('Filename', size=512),
+        'file_3': fields.binary('File'),
+        'filename_3': fields.char('Filename', size=512),
+        'file_4': fields.binary('File'),
+        'filename_4': fields.char('Filename', size=512),
+        'file_5': fields.binary('File'),
+        'filename_5': fields.char('Filename', size=512),
         'add_attachment': fields.boolean('Send with attachment?'),
         'info': fields.text('Info')
     }
@@ -31,22 +39,25 @@ class WizardLogReplyAttachment(osv.osv_memory):
 
         ctx = context.copy()
         attachment_ids = []
-        if wiz.file:
-            attachment_data = {
-                'name': wiz.filename,
-                'content': wiz.file
-            }
-            att_id = attachment_obj.create(cursor, uid, {
-                'description': _(
-                    "From CRM case [{}] {}"
-                ).format(wiz.case_id.id, wiz.case_id.name),
-                'datas_fname': attachment_data['name'],
-                'name': attachment_data['name'],
-                'datas': attachment_data['content'],
-                'res_model': 'crm.case',
-                'res_id': wiz.case_id.id
-            })
-            attachment_ids.append(att_id)
+        for x in xrange(1, 6):
+            file_content = getattr(wiz, 'file_{}'.format(x))
+            filename = getattr(wiz, 'filename_{}'.format(x))
+            if file_content:
+                attachment_data = {
+                    'name': filename,
+                    'content': file_content
+                }
+                att_id = attachment_obj.create(cursor, uid, {
+                    'description': _(
+                        "From CRM case [{}] {}"
+                    ).format(wiz.case_id.id, wiz.case_id.name),
+                    'datas_fname': attachment_data['name'],
+                    'name': attachment_data['name'],
+                    'datas': attachment_data['content'],
+                    'res_model': 'crm.case',
+                    'res_id': wiz.case_id.id
+                })
+                attachment_ids.append(att_id)
         ctx['attachment_ids'] = attachment_ids
         case_obj.case_log_reply(
                 cursor, uid, [wiz.case_id.id], context=ctx
