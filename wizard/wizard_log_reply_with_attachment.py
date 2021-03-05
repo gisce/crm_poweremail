@@ -44,7 +44,7 @@ class WizardLogReplyAttachment(osv.osv_memory):
         total_size = 0
         max_mb_size = float(conf_obj.get(
             cursor, uid, 'crm_poweremail_max_size_mb', 20))
-        for x in xrange(1, 6):
+        for x in range(1, 6):
             file_content = getattr(wiz, 'file_{}'.format(x))
             filename = getattr(wiz, 'filename_{}'.format(x))
             if file_content:
