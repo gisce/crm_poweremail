@@ -8,12 +8,23 @@
             <field name="arch" type="xml">
                 <form string="Do you want to send attachment?">
                     <field name="case_id" invisible="1"/>
-                    <field name="filename" invisible="1"/>
-                    <label string="Select a file to send as an attachment" />
+                    <field name="filename_1" invisible="1"/>
+                    <field name="filename_2" invisible="1"/>
+                    <field name="filename_3" invisible="1"/>
+                    <field name="filename_4" invisible="1"/>
+                    <field name="filename_5" invisible="1"/>
+                    <label string="Select a file to send as an attachment"/>
                     <separator colspan="4"/>
-                    <field name="file" filename="filename" nolabel="1"/>
+                    <group col="2" colspan="4">
+                    <field name="file_1" filename="filename_1" string="Attachment 1"/>
+                    <field name="file_2" filename="filename_2" string="Attachment 2"/>
+                    <field name="file_3" filename="filename_3" string="Attachment 3"/>
+                    <field name="file_4" filename="filename_4" string="Attachment 4"/>
+                    <field name="file_5" filename="filename_5" string="Attachment 5"/>
+                    </group>
                     <group colspan="4" col="2">
-                        <button string="Send" type="object" name="log_reply" icon="gtk-go-forward"/>
+                        <button string="Send" type="object" name="log_reply"
+                                icon="gtk-go-forward"/>
                     </group>
                 </form>
             </field>
@@ -25,6 +36,7 @@
             <field name="res_model">wizard.log.reply.attachment</field>
             <field name="target">new</field>
             <field name="view_type">form</field>
+             <field name="view_mode">form</field>
             <field name="view_id" ref="view_wizard_log_reply_attachment_form"/>
         </record>
 
