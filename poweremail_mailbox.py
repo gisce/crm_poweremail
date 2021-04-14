@@ -53,7 +53,7 @@ class PoweremailMailboxCRM(osv.osv):
         address_obj = self.pool.get('res.partner.address')
         email = Address.parse(email_address)
         address_id = address_obj.search(cursor, uid, [
-            ('email', 'ilike', email.address)
+            ('email', '=ilike', email.address)
         ])
         if address_id:
             return address_id[0]
