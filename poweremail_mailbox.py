@@ -291,6 +291,8 @@ class PoweremailMailboxCRM(osv.osv):
         # If original format mail, use it
         if p_mail.pem_mail_orig:
             mail = qreu.Email.parse(p_mail.pem_mail_orig)
+            if mail.is_auto_generated:
+                return res_id
             reply_to = [x.lower() for x in mail.recipients.addresses]
         else:
             # If no mail source found, the mail is being sent
