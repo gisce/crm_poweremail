@@ -546,10 +546,11 @@ class CrmCaseRule(osv.osv):
             # If this case cames from an email forward to
             original_mail = case.conversation_id.mails[0].read(['pem_mail_orig'])
             mail = qreu.Email.parse(original_mail[0]['pem_mail_orig'])
-            to = action.get_email_addresses(case, context)
-            body = action.get_email_body(case, context)
+            emails_to = ', '.join(
+                qaddress.parse_list(action.act_forward_to).addresses
+            )
             fmail = mail.forward(**{
-                'from': mail.from_, 'to': to, 'body_html': body,
+                'from': mail.from_, 'to': emails_to,
                 'prefix_subject': False
             })
             pem_account_id = case_obj.get_pem_account(cursor, uid, case)
