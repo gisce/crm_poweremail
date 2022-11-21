@@ -1,5 +1,5 @@
 Mako
-regex==2017.9.23
+regex==2021.11.10
 talon
 qreu>=0.10.0
 markdown
