@@ -8,7 +8,7 @@
     NOTE: Needs poweremail with conversations suport.
           See: https://github.com/openlabs/poweremail/issues/24
     """,
-    "version": "0.16.1",
+    "version": "0.16.2",
     "author": "GISCE-TI",
     "category": "CRM",
     "depends":[
