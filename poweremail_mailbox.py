@@ -85,7 +85,7 @@ class PoweremailMailboxCRM(osv.osv):
         )
         mail = qreu.Email.parse(p_mail['pem_mail_orig'])
         address_id = self.get_partner_address_from_email(cursor, uid,
-                                                         mail.from_.display)
+                                                         mail.from_.address)
         return address_obj.browse(cursor, uid, address_id) or False
 
     def create_crm_case(self, cursor, uid, p_mail_id, section_id,
