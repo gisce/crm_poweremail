@@ -343,7 +343,7 @@ class PoweremailMailboxCRM(osv.osv):
                 # If not found a conversation, add new case with email values
                 # body_text = quotations.extract_from_plain(
                 #     p_mail.pem_body_text)
-                res_id = self.create_crm_case(
+                self.create_crm_case(
                     cursor, uid, p_mail.id, section_id,
                     body_text=p_mail.pem_body_text
                 )
