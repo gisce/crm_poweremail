@@ -8,6 +8,7 @@ from osv import osv, fields
 from tools.translate import _
 from tools import config
 from qreu import address as qaddress
+from qreu.address import getaddresses
 
 
 class CrmCase(osv.osv):
@@ -337,7 +338,7 @@ class CrmCase(osv.osv):
 
         res = []
         if case.email_cc:
-            addresses = getaddresses([case.email_cc])
+            addresses = qaddress.getaddresses([case.email_cc])
             res = list(set([ '"{}" <{}>'.format(cc[0], cc[1])  for cc in addresses]))
 
         return res
