@@ -30,6 +30,17 @@ class WizardLogReplyAttachment(osv.osv_memory):
         'info': lambda *a: _('Select a file to send as an attachment')
     }
 
+    def _clean(self, cursor, uid, ids, context=None):
+        self.write(
+            cursor, uid, ids,
+            {
+                'file_1': False,
+                'file_2': False,
+                'file_3': False,
+                'file_4': False,
+                'file_5': False
+            }
+        )
 
     def log_reply(self, cursor, uid, ids, context=None):
         if context is None:
@@ -76,6 +87,9 @@ class WizardLogReplyAttachment(osv.osv_memory):
         case_obj.case_log_reply(
                 cursor, uid, [wiz.case_id.id], context=ctx
         )
+
+        self._clean(cursor, uid, ids, context=context)
+
         return {}
 
 WizardLogReplyAttachment()
