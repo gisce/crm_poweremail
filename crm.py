@@ -9,6 +9,7 @@ from osv import osv, fields
 from tools.translate import _
 from tools import config
 from qreu import address as qaddress
+from qreu.address import getaddresses
 
 
 class CrmCase(osv.osv):
@@ -332,6 +333,17 @@ class CrmCase(osv.osv):
             html = markdown(html)
         return html
 
+    def format_mails(self, cursor, uid, case, context=None):
+        if context is None:
+            context={}
+
+        res = []
+        if case.email_cc:
+            addresses = qaddress.getaddresses([case.email_cc])
+            res = list(set([ '"{}" <{}>'.format(cc[0], cc[1])  for cc in addresses]))
+
+        return res
+
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
         :param cr:      OpenERP Cursor
@@ -369,11 +381,9 @@ class CrmCase(osv.osv):
                     _("Missing Poweremail-Account with Reply-To"
                       " of the Case Section."))
 
-        email_cc = case.get_cc_emails(context=context)
         email_bcc = case.get_bcc_emails(context=context)
         emails = self.filter_mails(emails, emailfrom, case)
-        email_cc = self.filter_mails(
-            email_cc, emailfrom, case, todel_emails=emails)
+        email_cc = self.format_mails(cursor, uid, case)
         email_bcc = self.filter_mails(
             email_bcc, emailfrom, case, todel_emails=list(set(email_cc+emails)))
         email_html_body = self.parse_body_markdown(body)
