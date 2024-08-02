@@ -1,5 +1,6 @@
 Mako
 regex==2021.11.10
+cchardet>=2.2.0a2;python_version>"2.7.18"
 talon
 qreu>=0.10.0
 markdown
