@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import crm
-import res_partner
-import poweremail_mailbox
-import wizard
+from __future__ import absolute_import
+from . import crm
+from . import res_partner
+from . import poweremail_mailbox
+from . import wizard
