@@ -8,7 +8,9 @@ from markdown import markdown
 from osv import osv, fields
 from tools.translate import _
 from tools import config
+import qreu
 from qreu import address as qaddress
+from .sender import PowerEmailSender
 
 
 class CrmCase(osv.osv):
@@ -332,6 +334,17 @@ class CrmCase(osv.osv):
             html = markdown(html)
         return html
 
+    def get_pem_account(self, cursor, uid, case):
+        pm_account_obj = self.pool.get('poweremail.core_accounts')
+        pem_account_id = pm_account_obj.search(cursor, uid, [
+            ('email_id', '=', case.section_id.reply_to)
+        ])
+        if not pem_account_id:
+            raise osv.except_osv(_('Error!'),
+                                 _("Missing Poweremail-Account with Reply-To"
+                                   " of the Case Section."))
+        return pem_account_id[0]
+
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
         :param cr:      OpenERP Cursor
@@ -347,7 +360,6 @@ class CrmCase(osv.osv):
         """
         if not context:
             context = {}
-        pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
         attachment_obj = self.pool.get('ir.attachment')
         if (case.user_id and case.user_id.address_id
@@ -361,13 +373,7 @@ class CrmCase(osv.osv):
             raise osv.except_osv(_('Error!'),
                     _("No E-Mail ID Found for your Company address or missing "
                       "reply address in section!"))
-        pem_account_id = pm_account_obj.search(cursor, uid, [
-            ('email_id', '=', case.section_id.reply_to)
-        ])
-        if not pem_account_id:
-            raise osv.except_osv(_('Error!'),
-                    _("Missing Poweremail-Account with Reply-To"
-                      " of the Case Section."))
+        pem_account_id = self.get_pem_account(cursor, uid, case)
 
         email_cc = case.get_cc_emails(context=context)
         email_bcc = case.get_bcc_emails(context=context)
@@ -389,7 +395,7 @@ class CrmCase(osv.osv):
             'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
             'pem_body_text': body,
             'pem_body_html': email_html_body,
-            'pem_account_id': pem_account_id[0],
+            'pem_account_id': pem_account_id,
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
             'pem_message_id': make_msgid('tinycrm-%s' % case.id),
@@ -525,8 +531,34 @@ class CrmCaseRule(osv.osv):
 
     _columns = {
         'pm_template_id': fields.many2one(
-            'poweremail.templates', 'Poweremail Template', ondelete='restrict')
+            'poweremail.templates', 'Poweremail Template', ondelete='restrict'),
+        'act_forward': fields.boolean('Forward email'),
+        'act_forward_to': fields.char('Forward to', size=256),
     }
+
+    def execute(self, cursor, uid, ids, case, context=None):
+        if context is None:
+            context = {}
+        case_obj = self.pool.get('crm.case')
+        pem_account_obj = self.pool.get('poweremail.core_accounts')
+        res = super(CrmCaseRule, self).execute(cursor, uid, ids, case, context)
+        action = self.browse(cursor, uid, ids[0], context=context)
+        if action.act_forward and case.conversation_id:
+            # If this case cames from an email forward to
+            original_mail = case.conversation_id.mails[0].read(['pem_mail_orig'])
+            mail = qreu.Email.parse(original_mail[0]['pem_mail_orig'])
+            emails_to = ', '.join(
+                qaddress.parse_list(action.act_forward_to).addresses
+            )
+            fmail = mail.forward(**{
+                'from': mail.from_, 'to': emails_to,
+                'prefix_subject': False
+            })
+            pem_account_id = case_obj.get_pem_account(cursor, uid, case)
+            account = pem_account_obj.browse(cursor, uid, pem_account_id)
+            with PowerEmailSender(account):
+                fmail.send()
+        return res
     
     def get_email_addresses(self, cr, uid, rule_id, case, context):
         """
