@@ -18,7 +18,7 @@
     ],
     "init_xml": [],
     "demo_xml": [
-        "crm_demo.xml",
+        "demo/crm_demo.xml",
     ],
     "update_xml":[
         "wizard/wizard_log_reply_with_attachment.xml",

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="crmpoweremail_pem_account01" model="poweremail.core_accounts">
+            <field name="name">Test Account</field>
+            <field name="email_id">test@example.com</field>
+            <field name="company">no</field>
+            <field name="smtpserver">smtp.example.com</field>
+            <field name="smtpport">1234</field>
+            <field name="smtpuname">test</field>
+            <field name="smtppass">True</field>
+            <field name="state">approved</field>
+        </record>
+        <record id="crmpoweremail_section01" model="crm.case.section">
+            <field name="name">crm_poweremail</field>
+            <field name="reply_to">test@example.com</field>
+        </record>
+        <!-- DEMO CASE WITH EMAIL ADDRESS -->
+        <record id="crmpoweremail_case01" model="crm.case">
+            <field name="name">CASE 0001</field>
+            <field name="section_id" ref="crmpoweremail_section01"/>
+            <field name="email_cc">test2@mail.com, me@example.com</field>
+            <field name="email_bcc">test@mail.com, test@example.com</field>
+        </record>
+
+        <!-- DEMO CRM CASE HISTORY FILTER -->
+        <record model="poweremail.conversation" id="poweremail_conversation_1">
+            <field name="name">Assumpte de la presunció de l'assumpció</field>
+        </record>
+        <record model="poweremail.mailbox" id="poweremail_mailbox_1">
+            <field name="pem_account_id" ref="crm_poweremail.crmpoweremail_pem_account01"/>
+            <field name="pem_message_id">333</field>
+            <field name="state">read</field>
+            <field name="folder">inbox</field>
+            <field name="conversation_id" ref="poweremail_conversation_1"/>
+        </record>
+        <record model="crm.case" id="crm_poweremail.crmpoweremail_case01">
+            <field name="conversation_id" ref="poweremail_conversation_1"/>
+            <field name="partner_id" ref="base.main_partner"/>
+        </record>
+
+        <record model="ir.attachment" id="attachment_associated_to_filter_1">
+            <field name="name">Attachment associated to history filter</field>
+            <field name="category_id" ref="base_extended.attachment_category_temporal_1_month"/>
+            <field name="res_model">poweremail.mailbox</field>
+            <field name="res_id" ref="poweremail_mailbox_1"/>
+            <field name="datas" file="tests/fixtures/dispensable_image.jpg" type="binary"/>
+        </record>
+        <record model="ir.attachment" id="attachment_associated_to_filter_2">
+            <field name="name">Dixselia</field>
+            <field name="category_id" ref="base_extended.attachment_category_temporal_3_weeks"/>
+            <field name="res_model">poweremail.mailbox</field>
+            <field name="res_id" ref="poweremail_mailbox_1"/>
+            <field name="datas" file="tests/fixtures/text_error_deployments.png" type="binary"/>
+        </record>
+    </data>
+</openerp>
