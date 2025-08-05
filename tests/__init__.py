@@ -137,7 +137,7 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
                 'html': parts.get('html', ''),
                 'attachments': attachments,
             }
-        parsed_mail = get_payloads(self, parsed)
+        parsed_mail = get_payloads(parsed)
         vals = {
             'pem_from': parsed.from_.address,
             'pem_to': ','.join(parsed.to),
