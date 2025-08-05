@@ -117,7 +117,7 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
             account_id = self.pem_account_id
         parsed = Email.parse(raw_email)
 
-        def get_payloads(self, parsed_mail):
+        def get_payloads(parsed_mail):
             """
             Parse the Email with qreu's Email and return a dict with:
             - 'text': body_text
