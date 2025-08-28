@@ -72,7 +72,7 @@ class TestCRMPoweremail(testing.OOTestCase):
         address_obj.write(
             self.cursor, self.uid, 1, {'email': 'testing@example.com'})
         case_id = imod_obj.get_object_reference(
-            self.cursor, self.uid, 'crm_poweremail', 'crmpoweremail_case01')[1]
+            self.cursor, self.uid, 'crm', 'crmpoweremail_case01')[1]
         orig_mails_cc = 'test2@mail.com, me@example.com'
         orig_mails_bcc = 'test@mail.com, test@example.com'
         self.logger.info('Testing onchange for CC')

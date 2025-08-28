@@ -1,40 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-        <!-- DEMO CRM CASE HISTORY FILTER -->
-        <record model="poweremail.conversation" id="poweremail_conversation_1">
-            <field name="name">Assumpte de la presunció de l'assumpció</field>
-        </record>
-        <record model="poweremail.mailbox" id="poweremail_mailbox_1">
-            <field name="pem_account_id" ref="poweremail.info_energia_from_email"/>
-            <field name="pem_message_id">333</field>
-            <field name="state">read</field>
-            <field name="folder">inbox</field>
-            <field name="conversation_id" ref="poweremail_conversation_1"/>
-        </record>
-        <!-- DEMO CASE WITH EMAIL ADDRESS -->
-        <record model="crm.case" id="crmpoweremail_case01">
-            <field name="name">Customised search for consumption over the last 12 months</field>
-            <field name="section_id" ref="crm.crm_custom_service_section"/>
-            <field name="conversation_id" ref="poweremail_conversation_1"/>
-            <field name="email_cc">test2@mail.com, me@example.com</field>
+        <record model="crm.case" id="crm.crmpoweremail_case01">
+            <field name="conversation_id" ref="poweremail.poweremail_conversation_1"/>
             <field name="email_bcc">test@mail.com, test@example.com</field>
-            <field name="partner_id" ref="base.main_partner" />
         </record>
 
-        <record model="ir.attachment" id="attachment_associated_to_filter_1">
-            <field name="name">Attachment associated to history filter</field>
+        <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_1">
             <field name="category_id" ref="base_extended.attachment_category_temporal_1_month"/>
-            <field name="res_model">poweremail.mailbox</field>
-            <field name="res_id" ref="poweremail_mailbox_1"/>
-            <field name="datas" file="tests/fixtures/dispensable_image.jpg" type="binary"/>
         </record>
-        <record model="ir.attachment" id="attachment_associated_to_filter_2">
-            <field name="name">Dixselia</field>
+        <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_2">
             <field name="category_id" ref="base_extended.attachment_category_temporal_3_weeks"/>
-            <field name="res_model">poweremail.mailbox</field>
-            <field name="res_id" ref="poweremail_mailbox_1"/>
-            <field name="datas" file="tests/fixtures/text_error_deployments.png" type="binary"/>
         </record>
     </data>
 </openerp>
