@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-        <!-- DEMO CASE WITH EMAIL ADDRESS -->
-        <record id="crmpoweremail_case01" model="crm.case">
-            <field name="name">CASE 0001</field>
-            <field name="section_id" ref="crm.crmpoweremail_section01"/>
-            <field name="email_cc">test2@mail.com, me@example.com</field>
-            <field name="email_bcc">test@mail.com, test@example.com</field>
-        </record>
-
         <!-- DEMO CRM CASE HISTORY FILTER -->
         <record model="poweremail.conversation" id="poweremail_conversation_1">
             <field name="name">Assumpte de la presunció de l'assumpció</field>
@@ -20,9 +12,14 @@
             <field name="folder">inbox</field>
             <field name="conversation_id" ref="poweremail_conversation_1"/>
         </record>
-        <record model="crm.case" id="crm_poweremail.crmpoweremail_case01">
+        <!-- DEMO CASE WITH EMAIL ADDRESS -->
+        <record model="crm.case" id="crmpoweremail_case01">
+            <field name="name">Customised search for consumption over the last 12 months</field>
+            <field name="section_id" ref="crm.crm_custom_service_section"/>
             <field name="conversation_id" ref="poweremail_conversation_1"/>
-            <field name="partner_id" ref="base.main_partner"/>
+            <field name="email_cc">test2@mail.com, me@example.com</field>
+            <field name="email_bcc">test@mail.com, test@example.com</field>
+            <field name="partner_id" ref="base.main_partner" />
         </record>
 
         <record model="ir.attachment" id="attachment_associated_to_filter_1">
