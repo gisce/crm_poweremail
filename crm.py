@@ -647,3 +647,24 @@ class CrmCaseRule(osv.osv):
 
 
 CrmCaseRule()
+
+
+class CRMCaseLog(osv.osv):
+    _name = "crm.case.log"
+    _inherit = "crm.case.log"
+
+    def create(self, cursor, uid, vals, context=None):
+        if context.get('from_crm_poweremail', False):
+            # El que haurem de fer serà posar el timetrack_id dels clients
+            imd_obj = self.pool.get('ir.model.data')
+            time_tracking_id = imd_obj.get_object_reference(
+                cursor, uid, 'crm_timetracking', 'imputacio_client'
+            )[1]
+            vals.update({'time_tracking_id': time_tracking_id})
+
+        res = super(CRMCaseLog, self).create(cursor, uid, vals, context=context)
+
+        return res
+
+
+CRMCaseLog()

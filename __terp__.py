@@ -13,7 +13,7 @@
     "category": "CRM",
     "depends":[
         "base",
-        "crm",
+        "crm_timetracking",
         "poweremail",
     ],
     "init_xml": [],

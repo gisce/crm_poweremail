@@ -108,7 +108,9 @@ class PoweremailMailboxCRM(osv.osv):
         """
         if context is None:
             context = {}
+
         case_obj = self.pool.get('crm.case')
+        imd_obj = self.pool.get('ir.model.data')
         section_obj = self.pool.get('crm.case.section')
         poweremail_obj = self.pool.get('poweremail.mailbox')
 
@@ -116,6 +118,10 @@ class PoweremailMailboxCRM(osv.osv):
             'conversation_id', 'pem_subject', 'pem_from', 'pem_cc'
         ])
         section = section_obj.read(cursor, uid, section_id, ['user_id'])
+
+        time_tracking_id = imd_obj.get_object_reference(
+            cursor, uid, 'crm_timetracking', 'imputacio_empresa'
+        )[1]
 
         case_vals = {
             'conversation_id': p_mail['conversation_id'][0],
@@ -125,6 +131,7 @@ class PoweremailMailboxCRM(osv.osv):
             'email_from': p_mail['pem_from'],
             'email_cc': p_mail['pem_cc'],
             'user_id': section['user_id'][0] if section['user_id'] else False,
+            'time_tracking_id': time_tracking_id
         }
         address = self.get_partner_address(
             cursor, uid, p_mail['id']
@@ -134,7 +141,10 @@ class PoweremailMailboxCRM(osv.osv):
                 'partner_address_id': address.id,
                 'partner_id': address.partner_id.id
             })
-        return case_obj.create(cursor, uid, case_vals, context)
+
+        ctx = context.copy()
+        ctx['from_crm_poweremail'] = True
+        return case_obj.create(cursor, uid, case_vals, context=ctx)
 
     def update_case_from_mail(
             self, cursor, uid, p_mail_id, case_id, email, context=None):
@@ -168,13 +178,16 @@ class PoweremailMailboxCRM(osv.osv):
         )
 
         # 1.- Description
+        ctx = context.copy()
+        if case['state'] in ('pending', 'done'):
+            ctx['from_crm_poweremail'] = True
         old_descr = case['description']
         if old_descr:
             case_obj._history(
                 cursor, uid,
                 case_obj.browse(cursor, uid, [case_id]),
                 _('Reply'), history=True,
-                email=email.from_.address
+                email=email.from_.address, context=ctx
             )
         body_text = quotations.extract_from_plain(p_mail.pem_body_text)
         case_obj.write(cursor, uid, case_id, {
@@ -184,12 +197,12 @@ class PoweremailMailboxCRM(osv.osv):
         # 2.- Logs
         case_obj._history(
             cursor, uid, case_obj.browse(cursor, uid, [case_id]),
-            _('Reply'), history=True, email=email.from_.address
+            _('Reply'), history=True, email=email.from_.address, context=ctx
         )
         # 2.5 - If pending or done set to open again
         if case['state'] in ('pending', 'done'):
             case_obj.case_open(
-                cursor, uid, [case_id]
+                cursor, uid, [case_id], ctx
             )
         # 3.- Emails from CC, TO and FROM
         case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
