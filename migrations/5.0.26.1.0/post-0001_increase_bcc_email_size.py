@@ -6,8 +6,6 @@ def up(cursor, installed_version):
     if not installed_version:
         return
 
-    module = 'crm_poweremail'
-    mh = MigrationHelper(cursor, module)
     sql = """
         ALTER TABLE crm_case
             ALTER COLUMN email_bcc TYPE varchar(1000);
