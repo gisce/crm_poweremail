@@ -8,7 +8,7 @@ def up(cursor, installed_version):
 
     sql = """
         ALTER TABLE crm_case
-            ALTER COLUMN email_bcc TYPE varchar(1000);
+            ALTER COLUMN email_bcc TYPE varchar(2000);
     """
     cursor.execute(sql)
 
