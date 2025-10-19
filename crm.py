@@ -218,7 +218,7 @@ class CrmCase(osv.osv):
             )[0][fieldname]
             # OpenERP relations with name reads as `(id, name)`
             #   We only want the IDs
-            case_addrs = [c[0] for c in case_addrs]
+            case_addrs = [c[0] if isinstance(c, tuple) else c for c in case_addrs]
             # One2Many and Many2Many may be updated (written) with "[(6,0,ids)]"
             new_addrs = [(6, 0, list(set(case_addrs) - set(address_ids)))]
 
