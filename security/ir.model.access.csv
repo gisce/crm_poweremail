@@ -7,3 +7,4 @@
 "access_pe_template_case_users","poweremail.mailbox","poweremail.model_poweremail_mailbox","crm.group_crm_user",1,1,1,0
 "access_pe_template_case_manager","poweremail.conversation","poweremail.model_poweremail_mailbox","crm.group_crm_manager",1,1,1,1
 "access_pe_template_case_users","poweremail.conversation","poweremail.model_poweremail_mailbox","crm.group_crm_user",1,1,1,0
+"access_wizard_log_reply_attachment_rcwd","wizard.log.reply.attachment","model_wizard_log_reply_attachment","crm.group_crm_user",1,1,1,1
