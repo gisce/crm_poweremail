@@ -507,7 +507,7 @@ class CrmCase(osv.osv):
             obj='poweremail.mailbox',
             method=True
         ),
-        'email_bcc': fields.char('Secret Watchers Emails', size=252),
+        'email_bcc': fields.char('Secret Watchers Emails', size=2000),
         'cc_address_ids': fields.many2many(
             obj='res.partner.address', rel='crm_case_watchers_address',
             id1='case_id', id2='address_id', string='Watchers Addresses (CC)'
