@@ -1,0 +1,46 @@
+Delivered-To: sac@example.com
+Received: by servidor.anonim.local;
+        Wed, 16 Jul 2025 04:14:15 -0700 (PDT)
+Return-Path: <nom.cognom@empresa.cat>
+From: =?iso-8859-1?Q?RAMOS_ESCOL=C0=2C_PEPITA?= <pepita@example.com>
+To: "Servei d'Atenció al Client" <sac@example.com>
+Cc: "Departament Tècnic" <tecnologia@empresa.cat>
+Subject: Consulta sobre accés a dades
+Date: Wed, 16 Jul 2025 11:14:11 +0000
+Message-ID: <missatge1234@empresa.cat>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==boundary=="
+
+--==boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Bon dia,
+
+Des de la plataforma d'usuari veiem que es poden descarregar les dades per
+període facturat. Tanmateix, en intentar descarregar les corbes, en alguns
+casos la informació no es mostra correctament o no es pot obtenir.
+
+Ens podríeu ajudar amb això?
+
+És possible obtenir les dades per data de factura o com a part del detall de
+la factura?
+
+Moltes gràcies,
+
+Nom Cognom
+Responsable Comercial
+900 000 000
+Carrer Exemplar, 00, 1r - 00000 Ciutat
+contacte@empresa.cat | www.empresa.cat
+
+---
+
+Aquest missatge s'adreça exclusivament a la persona destinatària i pot contenir
+informació confidencial. Si no sou la persona indicada, us demanem que el
+destruïu i ens ho comuniqueu.
+
+Abans d'imprimir aquest correu, penseu si realment cal: el medi ambient és cosa
+de tots.
+
+--==boundary==--
