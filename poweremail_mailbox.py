@@ -188,7 +188,7 @@ class PoweremailMailboxCRM(osv.osv):
         )
         # 2.5 - If pending or done set to open again
         if case['state'] in ('pending', 'done'):
-            case_obj.case_open(
+            case_obj.case_reopen_and_notification(
                 cursor, uid, [case_id]
             )
         # 3.- Emails from CC, TO and FROM
