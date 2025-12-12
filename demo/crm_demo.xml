@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record model="crm.case" id="crm.crmpoweremail_case01">
+            <field name="conversation_id" ref="poweremail.poweremail_conversation_1"/>
+            <field name="email_bcc">test@mail.com, test@example.com</field>
+        </record>
+
+        <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_1">
+            <field name="category_id" ref="base_extended.attachment_category_temporal_1_month"/>
+        </record>
+        <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_2">
+            <field name="category_id" ref="base_extended.attachment_category_temporal_3_weeks"/>
+        </record>
+    </data>
+</openerp>
