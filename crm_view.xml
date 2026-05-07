@@ -14,7 +14,7 @@
                     </group>
                 </xpath>
                 <xpath expr="//button[@name='case_log_reply']" position="replace">
-                    <button name="%(action_wizard_log_reply_attachment_form)d" states="open" string="Send Partner &amp; Historize" type="action"/>
+                    <button name="open_log_reply_attachment" states="open" string="Send Partner &amp; Historize" type="object"/>
                 </xpath>
                 <!-- Remove old Email_CC -->
                 <xpath expr="//field[@name='email_cc']" position="replace"></xpath>
