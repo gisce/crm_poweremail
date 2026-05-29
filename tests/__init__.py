@@ -3,6 +3,7 @@ from destral import testing
 from destral.transaction import Transaction
 
 import logging
+import re
 
 
 class TestCRMPoweremail(testing.OOTestCase):
@@ -349,3 +350,76 @@ class TestCRMPoweremail(testing.OOTestCase):
         case = case_obj.browse(self.cursor, self.uid, case_id)
         cc_addr_ids = [addr.id for addr in case.cc_address_ids]
         self.assertIn(self.test_user_address_id, cc_addr_ids)
+
+    def test_incoming_html_inline_images_are_markdown_attachments(self):
+        """Test incoming HTML images reference saved attachments in markdown."""
+        self.logger.info('Testing incoming inline images in markdown')
+        from mock import patch
+
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Inline Images',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Inline Image Conversation'
+        })
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: HTML inline image\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: multipart/related; boundary="BOUNDARY"\r\n'
+            '\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '<html><body><p>Hello <strong>CRM</strong></p>'
+            '<p><img alt="Logo" src="cid:logo-cid"></p></body></html>\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: image/png; name="logo.png"\r\n'
+            'Content-Transfer-Encoding: base64\r\n'
+            'Content-ID: <logo-cid>\r\n'
+            'Content-Disposition: inline; filename="logo.png"\r\n'
+            '\r\n'
+            'iVBORw0KGgo=\r\n'
+            '--BOUNDARY--\r\n'
+        )
+
+        with patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
+            mailbox_obj.create(self.cursor, self.uid, {
+                'pem_from': 'newcustomer@example.com',
+                'pem_to': 'section@example.com',
+                'pem_subject': 'HTML inline image',
+                'pem_body_text': 'fallback text',
+                'pem_body_html': (
+                    '<html><body><p>Hello <strong>CRM</strong></p>'
+                    '<p><img alt="Logo" src="cid:logo-cid"></p>'
+                    '</body></html>'
+                ),
+                'pem_account_id': account_id,
+                'conversation_id': conv_id,
+                'folder': 'inbox',
+                'pem_mail_orig': raw_email,
+            })
+
+            self.assertTrue(mock_create_case.called)
+            args, kwargs = mock_create_case.call_args
+            pmail_id = args[2]
+            p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+            attachment_id = p_mail.pem_attachments_ids[0].id
+            body_text = kwargs['body_text']
+
+            self.assertIn('Hello **CRM**', body_text)
+            self.assertIn(
+                '![Logo](attachment://{0})'.format(attachment_id),
+                body_text
+            )
+            self.assertFalse(re.search(r'cid:logo-cid', body_text))
