@@ -386,12 +386,6 @@ class PoweremailMailboxCRM(osv.osv):
             mail = qreu.Email.parse(p_mail.pem_mail_orig)
             if mail.is_auto_generated:
                 return res_id
-            body_markdown = self._email_body_as_markdown(p_mail, mail)
-            if body_markdown and body_markdown != p_mail.pem_body_text:
-                self.write(cursor, uid, [res_id], {
-                    'pem_body_text': body_markdown
-                }, context=context)
-                p_mail = self.browse(cursor, uid, res_id, context=context)
             reply_to = [x.lower() for x in mail.recipients.addresses]
         else:
             # If no mail source found, the mail is being sent
@@ -406,6 +400,13 @@ class PoweremailMailboxCRM(osv.osv):
             if mail.from_.address == section.reply_to:
                 # Ignore mails sent FROM this section
                 return res_id
+
+            body_markdown = self._email_body_as_markdown(p_mail, mail)
+            if body_markdown and body_markdown != p_mail.pem_body_text:
+                self.write(cursor, uid, [res_id], {
+                    'pem_body_text': body_markdown
+                }, context=context)
+                p_mail = self.browse(cursor, uid, res_id, context=context)
 
             cases_ids = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)

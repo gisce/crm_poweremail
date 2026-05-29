@@ -424,3 +424,64 @@ class TestCRMPoweremail(testing.OOTestCase):
                 body_text
             )
             self.assertFalse(re.search(r'cid:logo%40example.com', body_text))
+
+    def test_non_crm_html_mail_keeps_original_body_text(self):
+        """Test HTML conversion does not mutate mail outside CRM sections."""
+        self.logger.info('Testing non CRM HTML mail body is not rewritten')
+
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Non CRM Inline Images',
+            'email_id': 'other@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Non CRM Inline Image Conversation'
+        })
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: other@example.com\r\n'
+            'Subject: HTML non CRM inline image\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: multipart/related; boundary="BOUNDARY"\r\n'
+            '\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '<html><body><p>Hello <strong>outside CRM</strong></p>'
+            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '</body></html>\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: image/png; name="logo.png"\r\n'
+            'Content-Transfer-Encoding: base64\r\n'
+            'Content-ID: <logo@example.com>\r\n'
+            'Content-Disposition: inline; filename="logo.png"\r\n'
+            '\r\n'
+            'iVBORw0KGgo=\r\n'
+            '--BOUNDARY--\r\n'
+        )
+
+        pmail_id = mailbox_obj.create(self.cursor, self.uid, {
+            'pem_from': 'newcustomer@example.com',
+            'pem_to': 'other@example.com',
+            'pem_subject': 'HTML non CRM inline image',
+            'pem_body_text': 'fallback text',
+            'pem_body_html': (
+                '<html><body><p>Hello <strong>outside CRM</strong></p>'
+                '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+                '</body></html>'
+            ),
+            'pem_account_id': account_id,
+            'conversation_id': conv_id,
+            'folder': 'inbox',
+            'pem_mail_orig': raw_email,
+        })
+
+        p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+        self.assertEqual(p_mail.pem_body_text, 'fallback text')
