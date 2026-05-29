@@ -9,6 +9,10 @@ from html2text import html2text
 from lxml import html as lxml_html
 import email as email_parser
 import re
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
 
 import qreu
 
@@ -35,6 +39,7 @@ def _normalize_attachment_ref(value):
     value = value.strip()
     if value.lower().startswith('cid:'):
         value = value[4:]
+    value = unquote(value)
     return value.strip('<>')
 
 

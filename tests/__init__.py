@@ -382,11 +382,12 @@ class TestCRMPoweremail(testing.OOTestCase):
             'Content-Type: text/html; charset="utf-8"\r\n'
             '\r\n'
             '<html><body><p>Hello <strong>CRM</strong></p>'
-            '<p><img alt="Logo" src="cid:logo-cid"></p></body></html>\r\n'
+            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '</body></html>\r\n'
             '--BOUNDARY\r\n'
             'Content-Type: image/png; name="logo.png"\r\n'
             'Content-Transfer-Encoding: base64\r\n'
-            'Content-ID: <logo-cid>\r\n'
+            'Content-ID: <logo@example.com>\r\n'
             'Content-Disposition: inline; filename="logo.png"\r\n'
             '\r\n'
             'iVBORw0KGgo=\r\n'
@@ -401,7 +402,7 @@ class TestCRMPoweremail(testing.OOTestCase):
                 'pem_body_text': 'fallback text',
                 'pem_body_html': (
                     '<html><body><p>Hello <strong>CRM</strong></p>'
-                    '<p><img alt="Logo" src="cid:logo-cid"></p>'
+                    '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
                     '</body></html>'
                 ),
                 'pem_account_id': account_id,
@@ -422,4 +423,4 @@ class TestCRMPoweremail(testing.OOTestCase):
                 '![Logo](attachment://{0})'.format(attachment_id),
                 body_text
             )
-            self.assertFalse(re.search(r'cid:logo-cid', body_text))
+            self.assertFalse(re.search(r'cid:logo%40example.com', body_text))
