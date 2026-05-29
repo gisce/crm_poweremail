@@ -4,3 +4,5 @@ cchardet>=2.2.0a2;python_version>"2.7.18"
 talon
 qreu>=0.10.0
 markdown
+html2text
+lxml<5.0.0
