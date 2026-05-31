@@ -12,5 +12,44 @@
         <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_2">
             <field name="category_id" ref="base_extended.attachment_category_temporal_3_weeks"/>
         </record>
+
+        <record model="poweremail.conversation" id="crm_poweremail_inline_image_conversation">
+            <field name="name">Demo inline image in CRM case body</field>
+        </record>
+
+        <record model="poweremail.mailbox" id="crm_poweremail_inline_image_mailbox">
+            <field name="pem_account_id" ref="poweremail.info_energia_from_email"/>
+            <field name="pem_message_id">&lt;demo-inline-image@crm-poweremail&gt;</field>
+            <field name="pem_from">client.demo@example.com</field>
+            <field name="pem_to">test@example.com</field>
+            <field name="pem_subject">Demo: imatge inline al CRM</field>
+            <field name="pem_body_text">Correu entrant demo amb imatge inline.</field>
+            <field name="state">read</field>
+            <field name="folder">inbox</field>
+            <field name="conversation_id" ref="crm_poweremail_inline_image_conversation"/>
+        </record>
+
+        <record model="ir.attachment" id="crm_poweremail_inline_image_attachment">
+            <field name="name">demo-inline-image.png</field>
+            <field name="datas_fname">demo-inline-image.png</field>
+            <field name="res_model">poweremail.mailbox</field>
+            <field name="res_id" ref="crm_poweremail_inline_image_mailbox"/>
+            <field name="datas">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=</field>
+        </record>
+
+        <record model="poweremail.mailbox" id="crm_poweremail_inline_image_mailbox">
+            <field name="pem_attachments_ids" eval="[(6, 0, [ref('crm_poweremail_inline_image_attachment')])]"/>
+        </record>
+
+        <record model="crm.case" id="crm_poweremail_inline_image_case">
+            <field name="name">Demo: imatge inline al cos del correu</field>
+            <field name="section_id" ref="crm.crm_custom_service_section"/>
+            <field name="active" eval="True"/>
+            <field name="user_id" ref="base.user_demo"/>
+            <field name="partner_id" ref="base.main_partner"/>
+            <field name="email_from">client.demo@example.com</field>
+            <field name="conversation_id" ref="crm_poweremail_inline_image_conversation"/>
+            <field name="description" eval="'**Correu entrant demo amb imatge inline**\n\nHola **CRM**, aquesta imatge hauria de renderitzar-se dins el cos del missatge:\n\n![Logo demo](attachment://%s)\n\nText final del correu.' % ref('crm_poweremail_inline_image_attachment')"/>
+        </record>
     </data>
 </openerp>
