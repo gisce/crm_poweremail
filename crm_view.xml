@@ -16,6 +16,9 @@
                 <xpath expr="//button[@name='case_log_reply']" position="replace">
                     <button name="open_log_reply_attachment" states="open" string="Send Partner &amp; Historize" type="object"/>
                 </xpath>
+                <xpath expr="//button[@name='case_log_reply']/preceding-sibling::field[@name='description'][1]" position="attributes">
+                    <attribute name="widget">markdown_editor</attribute>
+                </xpath>
                 <!-- Remove old Email_CC -->
                 <xpath expr="//field[@name='email_cc']" position="replace"></xpath>
                 <!-- ADD Watchers -->
