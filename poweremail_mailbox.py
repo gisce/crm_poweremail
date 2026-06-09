@@ -298,6 +298,12 @@ class PoweremailMailboxCRM(osv.osv):
             return html2text(html_body).strip()
         return p_mail.pem_body_text or mail.body_parts.get('plain') or ''
 
+    def _markdown_inline_images_enabled(self, cursor, uid):
+        conf_obj = self.pool.get('res.config')
+        return bool(int(conf_obj.get(
+            cursor, uid, 'crm_poweremail_markdown_inline_images', 0
+        )))
+
     def forward_case_response(
             self, cursor, uid, pmail_id, case, email, context=None):
         """
@@ -401,12 +407,13 @@ class PoweremailMailboxCRM(osv.osv):
                 # Ignore mails sent FROM this section
                 return res_id
 
-            body_markdown = self._email_body_as_markdown(p_mail, mail)
-            if body_markdown and body_markdown != p_mail.pem_body_text:
-                self.write(cursor, uid, [res_id], {
-                    'pem_body_text': body_markdown
-                }, context=context)
-                p_mail = self.browse(cursor, uid, res_id, context=context)
+            if self._markdown_inline_images_enabled(cursor, uid):
+                body_markdown = self._email_body_as_markdown(p_mail, mail)
+                if body_markdown and body_markdown != p_mail.pem_body_text:
+                    self.write(cursor, uid, [res_id], {
+                        'pem_body_text': body_markdown
+                    }, context=context)
+                    p_mail = self.browse(cursor, uid, res_id, context=context)
 
             cases_ids = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)

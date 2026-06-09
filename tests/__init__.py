@@ -356,6 +356,7 @@ class TestCRMPoweremail(testing.OOTestCase):
         self.logger.info('Testing incoming inline images in markdown')
         from mock import patch
 
+        conf_obj = self.pool.get('res.config')
         mailbox_obj = self.pool.get('poweremail.mailbox')
         conv_obj = self.pool.get('poweremail.conversation')
         account_obj = self.pool.get('poweremail.core_accounts')
@@ -394,7 +395,9 @@ class TestCRMPoweremail(testing.OOTestCase):
             '--BOUNDARY--\r\n'
         )
 
-        with patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
+        with conf_obj.ResConfigPatch({
+                'crm_poweremail_markdown_inline_images': '1'
+        }), patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
             mailbox_obj.create(self.cursor, self.uid, {
                 'pem_from': 'newcustomer@example.com',
                 'pem_to': 'section@example.com',
@@ -424,6 +427,74 @@ class TestCRMPoweremail(testing.OOTestCase):
                 body_text
             )
             self.assertFalse(re.search(r'cid:logo%40example.com', body_text))
+
+    def test_incoming_html_inline_images_keep_text_by_default(self):
+        """Test HTML conversion is disabled by default for CRM mail."""
+        self.logger.info('Testing incoming inline images opt-in config')
+        from mock import patch
+
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Inline Images Disabled',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Inline Image Disabled Conversation'
+        })
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: HTML inline image disabled\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: multipart/related; boundary="BOUNDARY"\r\n'
+            '\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '<html><body><p>Hello <strong>CRM</strong></p>'
+            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '</body></html>\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: image/png; name="logo.png"\r\n'
+            'Content-Transfer-Encoding: base64\r\n'
+            'Content-ID: <logo@example.com>\r\n'
+            'Content-Disposition: inline; filename="logo.png"\r\n'
+            '\r\n'
+            'iVBORw0KGgo=\r\n'
+            '--BOUNDARY--\r\n'
+        )
+
+        with patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
+            mailbox_obj.create(self.cursor, self.uid, {
+                'pem_from': 'newcustomer@example.com',
+                'pem_to': 'section@example.com',
+                'pem_subject': 'HTML inline image disabled',
+                'pem_body_text': 'fallback text',
+                'pem_body_html': (
+                    '<html><body><p>Hello <strong>CRM</strong></p>'
+                    '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+                    '</body></html>'
+                ),
+                'pem_account_id': account_id,
+                'conversation_id': conv_id,
+                'folder': 'inbox',
+                'pem_mail_orig': raw_email,
+            })
+
+            self.assertTrue(mock_create_case.called)
+            args, kwargs = mock_create_case.call_args
+            pmail_id = args[2]
+            p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+
+            self.assertEqual(p_mail.pem_body_text, 'fallback text')
+            self.assertEqual(kwargs['body_text'], 'fallback text')
 
     def test_non_crm_html_mail_keeps_original_body_text(self):
         """Test HTML conversion does not mutate mail outside CRM sections."""

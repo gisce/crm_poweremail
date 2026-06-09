@@ -5,14 +5,6 @@
             <field name="conversation_id" ref="poweremail.poweremail_conversation_1"/>
             <field name="email_bcc">test@mail.com, test@example.com</field>
         </record>
-
-        <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_1">
-            <field name="category_id" ref="base_extended.attachment_category_temporal_1_month"/>
-        </record>
-        <record model="ir.attachment" id="poweremail.attachment_associated_to_filter_2">
-            <field name="category_id" ref="base_extended.attachment_category_temporal_3_weeks"/>
-        </record>
-
         <record model="poweremail.conversation" id="crm_poweremail_inline_image_conversation">
             <field name="name">Demo inline image in CRM case body</field>
         </record>
