@@ -16,6 +16,10 @@ def up(cursor, installed_version):
         xml_path='crm_view.xml',
         init_record_ids=['crm_case-view'],
     )
+    mh.update_xml_records(
+        xml_path='crm_data.xml',
+        init_record_ids=['crm_poweremail_markdown_inline_images'],
+    )
 
 
 def down(cursor, installed_version):
