@@ -18,6 +18,10 @@ import qreu
 
 
 CASE_ID_RE = re.compile(r"<.*tinycrm-(\d+)@.*>", re.UNICODE)
+MARKDOWN_EMAIL_AUTOLINK_RE = re.compile(
+    r'<(mailto:)?([A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,})>',
+    re.IGNORECASE | re.UNICODE
+)
 
 try:
     basestring
@@ -98,6 +102,12 @@ def _replace_inline_image_sources(html_body, attachment_map):
         for child in fragment
     ])
     return ''.join(parts)
+
+
+def _escape_mdx_email_autolinks(markdown_body):
+    if not markdown_body:
+        return markdown_body
+    return MARKDOWN_EMAIL_AUTOLINK_RE.sub(r'\2', markdown_body)
 
 
 class PoweremailMailboxCRM(osv.osv):
@@ -295,7 +305,7 @@ class PoweremailMailboxCRM(osv.osv):
             html_body = _replace_inline_image_sources(
                 html_body, attachment_map
             )
-            return html2text(html_body).strip()
+            return _escape_mdx_email_autolinks(html2text(html_body).strip())
         return p_mail.pem_body_text or mail.body_parts.get('plain') or ''
 
     def _markdown_inline_images_enabled(self, cursor, uid):
