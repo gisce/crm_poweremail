@@ -177,7 +177,8 @@ The GISCE-TI team
             <field name="name">Poweremail Automatically Close Case (from pending)</field>
             <field name="active" eval="False"/>
             <field name="trg_state_from">pending</field>
-            <field name="trg_state_to">done</field>
+            <field name="act_state">done</field>
+            <field name="trg_date_type">action_last</field>
             <field name="trg_date_range">15</field>
             <field name="trg_date_range_type">day</field>
             <field name="trg_pending_client_reply" eval="True"/>
@@ -191,7 +192,8 @@ The GISCE-TI team
             <field name="name">Poweremail Automatically Close Case (from open)</field>
             <field name="active" eval="False"/>
             <field name="trg_state_from">open</field>
-            <field name="trg_state_to">done</field>
+            <field name="act_state">done</field>
+            <field name="trg_date_type">action_last</field>
             <field name="trg_date_range">15</field>
             <field name="trg_date_range_type">day</field>
             <field name="trg_pending_client_reply" eval="True"/>
