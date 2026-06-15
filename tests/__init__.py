@@ -494,12 +494,12 @@ class TestCRMPoweremail(testing.OOTestCase):
         inline_parts = [
             part for part in message.walk()
             if part.get('Content-ID') ==
-            '<crm-poweremail-attachment-{0}@local>'.format(attachment_id)
+            '<poweremail-attachment-{0}@local>'.format(attachment_id)
         ]
 
         self.assertEqual(len(html_parts), 1)
         self.assertIn(
-            'src="cid:crm-poweremail-attachment-{0}@local"'.format(
+            'src="cid:poweremail-attachment-{0}@local"'.format(
                 attachment_id
             ),
             html_parts[0]
