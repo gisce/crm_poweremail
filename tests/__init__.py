@@ -3,6 +3,40 @@ from destral import testing
 from destral.transaction import Transaction
 
 import logging
+import os
+import time
+import unittest
+
+
+class TestPoweremailDateMail(unittest.TestCase):
+    def test_date_mail_from_message_uses_localtime(self):
+        if not hasattr(time, 'tzset'):
+            return
+
+        from poweremail_mailbox import date_mail_from_message_localtime
+
+        old_tz = os.environ.get('TZ')
+        os.environ['TZ'] = 'Europe/Madrid'
+        time.tzset()
+        try:
+            raw_message = (
+                'From: customer@example.com\r\n'
+                'To: section@example.com\r\n'
+                'Subject: Date Localtime\r\n'
+                'Date: Thu, 8 Oct 2009 09:35:42 -0000\r\n'
+                '\r\n'
+                'Testing date localtime\r\n'
+            )
+            self.assertEqual(
+                date_mail_from_message_localtime(raw_message),
+                '2009-10-08 11:35:42'
+            )
+        finally:
+            if old_tz is None:
+                os.environ.pop('TZ', None)
+            else:
+                os.environ['TZ'] = old_tz
+            time.tzset()
 
 
 class TestCRMPoweremail(testing.OOTestCase):
