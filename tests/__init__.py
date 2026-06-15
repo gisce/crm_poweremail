@@ -351,6 +351,77 @@ class TestCRMPoweremail(testing.OOTestCase):
         cc_addr_ids = [addr.id for addr in case.cc_address_ids]
         self.assertIn(self.test_user_address_id, cc_addr_ids)
 
+    def test_email_send_moves_markdown_case_attachments(self):
+        """Test markdown attachment links are sent with the email."""
+        self.logger.info('Testing email_send moves markdown attachments')
+        case_obj = self.pool.get('crm.case')
+        attachment_obj = self.pool.get('ir.attachment')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Markdown Attachments',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        case_id = case_obj.create(self.cursor, self.uid, {
+            'name': 'Test Case With Markdown Attachment',
+            'section_id': self.test_section_id,
+            'user_id': self.uid,
+        })
+        other_case_id = case_obj.create(self.cursor, self.uid, {
+            'name': 'Other Test Case',
+            'section_id': self.test_section_id,
+            'user_id': self.uid,
+        })
+        attachment_id = attachment_obj.create(self.cursor, self.uid, {
+            'datas_fname': 'case-file.txt',
+            'name': 'case-file.txt',
+            'datas': 'Q2FzZSBmaWxl',
+            'res_model': 'crm.case',
+            'res_id': case_id,
+        })
+        other_attachment_id = attachment_obj.create(self.cursor, self.uid, {
+            'datas_fname': 'other-file.txt',
+            'name': 'other-file.txt',
+            'datas': 'T3RoZXIgZmlsZQ==',
+            'res_model': 'crm.case',
+            'res_id': other_case_id,
+        })
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+        body = (
+            'Resposta amb adjunt [](attachment://{0}) '
+            'i un adjunt alie [](attachment://{1})'
+        ).format(attachment_id, other_attachment_id)
+
+        case_obj.email_send(
+            self.cursor, self.uid, case, ['customer@example.com'], body)
+
+        mailbox_ids = mailbox_obj.search(self.cursor, self.uid, [
+            ('conversation_id', '=', case.conversation_id.id),
+            ('folder', '=', 'outbox')
+        ])
+        mailbox = mailbox_obj.browse(self.cursor, self.uid, mailbox_ids[0])
+        mailbox_attachment_ids = [
+            attachment.id for attachment in mailbox.pem_attachments_ids
+        ]
+
+        self.assertIn(attachment_id, mailbox_attachment_ids)
+        self.assertNotIn(other_attachment_id, mailbox_attachment_ids)
+
+        attachment = attachment_obj.browse(
+            self.cursor, self.uid, attachment_id)
+        self.assertEqual(attachment.res_model, 'poweremail.mailbox')
+        self.assertEqual(attachment.res_id, mailbox.id)
+
+        other_attachment = attachment_obj.browse(
+            self.cursor, self.uid, other_attachment_id)
+        self.assertEqual(other_attachment.res_model, 'crm.case')
+        self.assertEqual(other_attachment.res_id, other_case_id)
+
     def test_incoming_html_inline_images_are_markdown_attachments(self):
         """Test incoming HTML images reference saved attachments in markdown."""
         self.logger.info('Testing incoming inline images in markdown')
