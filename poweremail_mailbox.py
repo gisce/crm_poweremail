@@ -5,18 +5,109 @@ from tools import flatten
 from talon import quotations
 from datetime import datetime
 from qreu.address import Address
+from html2text import html2text
+from lxml import html as lxml_html
+import email as email_parser
 import re
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
 
 import qreu
 
 
 CASE_ID_RE = re.compile(r"<.*tinycrm-(\d+)@.*>", re.UNICODE)
+MARKDOWN_EMAIL_AUTOLINK_RE = re.compile(
+    r'<(mailto:)?([A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,})>',
+    re.IGNORECASE | re.UNICODE
+)
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def get_cases_ids_from_references(references):
     return list({
         int(x) for x in flatten([CASE_ID_RE.findall(ref) for ref in references])
     })
+
+
+def _normalize_attachment_ref(value):
+    if not value:
+        return False
+    if not isinstance(value, basestring):
+        value = str(value)
+    value = value.strip()
+    if value.lower().startswith('cid:'):
+        value = value[4:]
+    value = unquote(value)
+    return value.strip('<>')
+
+
+def _attachment_ids_from_browse(attachments):
+    return [attachment.id for attachment in attachments]
+
+
+def _build_inline_attachment_map(raw_email, attachments):
+    attachment_ids = _attachment_ids_from_browse(attachments)
+    if not raw_email or not attachment_ids:
+        return {}
+
+    mail_message = email_parser.message_from_string(raw_email)
+    attachment_map = {}
+    part_index = 0
+    for part in mail_message.walk():
+        filename = part.get_filename()
+        if not filename:
+            continue
+        if part_index >= len(attachment_ids):
+            break
+        attachment_id = attachment_ids[part_index]
+        for value in (
+                part.get('Content-ID'),
+                part.get('Content-Location'),
+                filename):
+            key = _normalize_attachment_ref(value)
+            if key:
+                attachment_map[key] = attachment_id
+        part_index += 1
+    return attachment_map
+
+
+def _replace_inline_image_sources(html_body, attachment_map):
+    if not html_body or not attachment_map:
+        return html_body
+    try:
+        fragment = lxml_html.fragment_fromstring(
+            html_body, create_parent='div'
+        )
+    except Exception:
+        return html_body
+
+    changed = False
+    for image in fragment.iter('img'):
+        src = _normalize_attachment_ref(image.get('src'))
+        if src in attachment_map:
+            image.set('src', 'attachment://{0}'.format(attachment_map[src]))
+            changed = True
+
+    if not changed:
+        return html_body
+    parts = [fragment.text or '']
+    parts.extend([
+        lxml_html.tostring(child, encoding='unicode', method='html')
+        for child in fragment
+    ])
+    return ''.join(parts)
+
+
+def _escape_mdx_email_autolinks(markdown_body):
+    if not markdown_body:
+        return markdown_body
+    return MARKDOWN_EMAIL_AUTOLINK_RE.sub(r'\2', markdown_body)
 
 
 class PoweremailMailboxCRM(osv.osv):
@@ -205,6 +296,24 @@ class PoweremailMailboxCRM(osv.osv):
             cursor, uid,  case_id, address_ids=addrs_ids
         )
 
+    def _email_body_as_markdown(self, p_mail, mail):
+        html_body = p_mail.pem_body_html or mail.body_parts.get('html')
+        if html_body:
+            attachment_map = _build_inline_attachment_map(
+                p_mail.pem_mail_orig, p_mail.pem_attachments_ids
+            )
+            html_body = _replace_inline_image_sources(
+                html_body, attachment_map
+            )
+            return _escape_mdx_email_autolinks(html2text(html_body).strip())
+        return p_mail.pem_body_text or mail.body_parts.get('plain') or ''
+
+    def _markdown_inline_images_enabled(self, cursor, uid):
+        conf_obj = self.pool.get('res.config')
+        return bool(int(conf_obj.get(
+            cursor, uid, 'crm_poweremail_markdown_inline_images', 0
+        )))
+
     def forward_case_response(
             self, cursor, uid, pmail_id, case, email, context=None):
         """
@@ -307,6 +416,14 @@ class PoweremailMailboxCRM(osv.osv):
             if mail.from_.address == section.reply_to:
                 # Ignore mails sent FROM this section
                 return res_id
+
+            if self._markdown_inline_images_enabled(cursor, uid):
+                body_markdown = self._email_body_as_markdown(p_mail, mail)
+                if body_markdown and body_markdown != p_mail.pem_body_text:
+                    self.write(cursor, uid, [res_id], {
+                        'pem_body_text': body_markdown
+                    }, context=context)
+                    p_mail = self.browse(cursor, uid, res_id, context=context)
 
             cases_ids = case_obj.search(cursor, uid, [
                 ('conversation_id', '=', p_mail.conversation_id.id)
