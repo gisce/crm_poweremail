@@ -13,7 +13,6 @@
     "category": "CRM",
     "depends":[
         "base",
-        "base_extended",
         "crm",
         "poweremail",
     ],
