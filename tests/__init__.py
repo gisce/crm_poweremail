@@ -2,6 +2,7 @@
 from destral import testing
 from destral.transaction import Transaction
 
+import email
 import logging
 import re
 
@@ -421,6 +422,95 @@ class TestCRMPoweremail(testing.OOTestCase):
             self.cursor, self.uid, other_attachment_id)
         self.assertEqual(other_attachment.res_model, 'crm.case')
         self.assertEqual(other_attachment.res_id, other_case_id)
+
+    def test_email_send_sends_markdown_images_inline(self):
+        """Test markdown image attachments are sent as inline MIME parts."""
+        self.logger.info('Testing markdown images are sent inline')
+        from mock import patch
+        from qreu.sendcontext import Sender
+
+        class CaptureSender(Sender):
+            def __init__(self):
+                super(CaptureSender, self).__init__()
+                self.mime_string = None
+
+            def sendmail(self, mail):
+                self.mime_string = mail.mime_string
+                return True
+
+        case_obj = self.pool.get('crm.case')
+        attachment_obj = self.pool.get('ir.attachment')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Markdown Inline Images',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        case_id = case_obj.create(self.cursor, self.uid, {
+            'name': 'Test Case With Markdown Inline Image',
+            'section_id': self.test_section_id,
+            'user_id': self.uid,
+        })
+        attachment_id = attachment_obj.create(self.cursor, self.uid, {
+            'datas_fname': 'logo.png',
+            'name': 'logo.png',
+            'datas': 'iVBORw0KGgo=',
+            'res_model': 'crm.case',
+            'res_id': case_id,
+        })
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+
+        case_obj.email_send(
+            self.cursor, self.uid, case, ['customer@example.com'],
+            'Resposta amb imatge ![Logo](attachment://{0})'.format(
+                attachment_id
+            )
+        )
+
+        mailbox_ids = mailbox_obj.search(self.cursor, self.uid, [
+            ('conversation_id', '=', case.conversation_id.id),
+            ('folder', '=', 'outbox')
+        ])
+        mailbox = mailbox_obj.browse(self.cursor, self.uid, mailbox_ids[0])
+        sender = CaptureSender()
+
+        with patch.object(account_obj, 'get_sender', return_value=sender):
+            mailbox_obj.send_this_mail(self.cursor, self.uid, [mailbox.id])
+
+        message = email.message_from_string(sender.mime_string)
+        self.assertEqual(message.get_content_type(), 'multipart/related')
+        html_parts = [
+            part.get_payload(decode=True).decode(
+                part.get_content_charset() or 'utf-8'
+            )
+            for part in message.walk()
+            if part.get_content_type() == 'text/html'
+        ]
+        inline_parts = [
+            part for part in message.walk()
+            if part.get('Content-ID') ==
+            '<crm-poweremail-attachment-{0}@local>'.format(attachment_id)
+        ]
+
+        self.assertEqual(len(html_parts), 1)
+        self.assertIn(
+            'src="cid:crm-poweremail-attachment-{0}@local"'.format(
+                attachment_id
+            ),
+            html_parts[0]
+        )
+        self.assertFalse(re.search(r'attachment://{0}'.format(attachment_id),
+                                   html_parts[0]))
+        self.assertEqual(len(inline_parts), 1)
+        self.assertEqual(
+            inline_parts[0].get('Content-Disposition'),
+            'inline; filename="logo.png"'
+        )
 
     def test_incoming_html_inline_images_are_markdown_attachments(self):
         """Test incoming HTML images reference saved attachments in markdown."""
