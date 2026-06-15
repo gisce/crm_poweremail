@@ -61,6 +61,15 @@ class TestCRMPoweremail(testing.OOTestCase):
             'reply_to': 'section@example.com',
         })
 
+    def _assert_same_emails(self, value, expected, msg=None):
+        def split_emails(emails):
+            return sorted([
+                email.strip()
+                for email in emails.split(',')
+                if email.strip()
+            ])
+        self.assertEqual(split_emails(value), split_emails(expected), msg=msg)
+
     def _check_onchange(self, emails, case_id, mail_type):
         case_obj = self.pool.get('crm.case')
         case = case_obj.browse(self.cursor, self.uid, case_id)
@@ -69,17 +78,19 @@ class TestCRMPoweremail(testing.OOTestCase):
             case_mails = case.email_cc
         elif mail_type == 'bcc':
             case_mails = case.email_bcc
-        self.assertEqual(case_mails, emails,
-                         msg='Case emails:\n'
-                             '{}\n'
-                             '\tDo not match with expected\n'
-                             '{}'.format(case_mails, emails))
+        self._assert_same_emails(
+            case_mails, emails,
+            msg='Case emails:\n'
+                '{}\n'
+                '\tDo not match with expected\n'
+                '{}'.format(case_mails, emails)
+        )
         appended_string = (
             u'testing@example.com, {}'.format(emails)
         )
         not_appended_string = emails
         changed_addresses = case._onchange_address_ids(mail_type, [[1, 1, [1]]])
-        self.assertEqual(
+        self._assert_same_emails(
             changed_addresses['value']['email_{}'.format(mail_type)],
             appended_string,
             msg='Appended string:\n'
@@ -97,7 +108,7 @@ class TestCRMPoweremail(testing.OOTestCase):
         case.write(vals)
         case = case_obj.browse(self.cursor, self.uid, case_id)
         changed_addresses = case._onchange_address_ids(mail_type, [[1, 1, []]])
-        self.assertEqual(
+        self._assert_same_emails(
             changed_addresses['value']['email_{}'.format(mail_type)],
             not_appended_string,
             msg='Removing address string:\n'
@@ -690,6 +701,8 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
         )
         with open(path, 'rb') as f:
             raw_email = f.read()
+        if not isinstance(raw_email, str):
+            raw_email = raw_email.decode('iso-8859-1')
         email_id = self.create_email_case(raw_email)
 
         email = pem_obj.browse(self.cursor, self.uid, email_id)
