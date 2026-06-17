@@ -383,7 +383,8 @@ class TestCRMPoweremail(testing.OOTestCase):
             'Content-Type: text/html; charset="utf-8"\r\n'
             '\r\n'
             '<html><body><p>Hello <strong>CRM</strong></p>'
-            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '<p><img alt="Logo\n\nDescripción generada automáticamente" '
+            'src="cid:logo%40example.com"></p>'
             '</body></html>\r\n'
             '--BOUNDARY\r\n'
             'Content-Type: image/png; name="logo.png"\r\n'
@@ -405,7 +406,9 @@ class TestCRMPoweremail(testing.OOTestCase):
                 'pem_body_text': 'fallback text',
                 'pem_body_html': (
                     '<html><body><p>Hello <strong>CRM</strong></p>'
-                    '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+                    '<p><img alt="Logo\n\n'
+                    'Descripción generada automáticamente" '
+                    'src="cid:logo%40example.com"></p>'
                     '</body></html>'
                 ),
                 'pem_account_id': account_id,
@@ -423,9 +426,11 @@ class TestCRMPoweremail(testing.OOTestCase):
 
             self.assertIn('Hello **CRM**', body_text)
             self.assertIn(
-                '![Logo](attachment://{0})'.format(attachment_id),
+                '![Logo Descripción generada automáticamente]'
+                '(attachment://{0})'.format(attachment_id),
                 body_text
             )
+            self.assertNotIn('Logo\n\nDescripción', body_text)
             self.assertFalse(re.search(r'cid:logo%40example.com', body_text))
 
     def test_markdown_image_descriptions_strip_newlines(self):
