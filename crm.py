@@ -328,7 +328,7 @@ class CrmCase(osv.osv):
     def parse_body_markdown(self, html):
         def clean_image_description(match):
             description = ' '.join(match.group(1).split())
-            return '![{}]({})'.format(description, match.group(2))
+            return u'![{}]({})'.format(description, match.group(2))
 
         if (
                 html.strip()[0] != '<' and
