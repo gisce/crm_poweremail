@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from datetime import datetime
 from email.utils import make_msgid
+import re
 from mako.template import Template
 
 from markdown import markdown
@@ -325,11 +326,21 @@ class CrmCase(osv.osv):
         return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
 
     def parse_body_markdown(self, html):
+        def clean_image_description(match):
+            description = ' '.join(match.group(1).split())
+            return '![{}]({})'.format(description, match.group(2))
+
         if (
                 html.strip()[0] != '<' and
                 "<br/>" not in html and
                 "<br>" not in html
         ):
+            html = re.sub(
+                r'!\[([^\]]*)\]\(([^)]*)\)',
+                clean_image_description,
+                html,
+                flags=re.DOTALL
+            )
             html = markdown(html)
         return html
 
