@@ -652,12 +652,14 @@ class TestCRMPoweremail(testing.OOTestCase):
             '```'
         )
         html = case_obj.parse_body_markdown(markdown_text)
+        compact_html = re.sub(r'>\s+<', '><', html)
 
         self.assertIn('<strong>Bold</strong>', html)
         self.assertIn('<em>italic</em>', html)
         self.assertIn('<ul>', html)
-        self.assertIn('<li>Parent', html)
-        self.assertIn('<li>Child</li>', html)
+        self.assertIn(
+            '<li>Parent<ul><li>Child</li></ul></li>', compact_html
+        )
         self.assertIn('<table>', html)
         self.assertIn('<th>Col A</th>', html)
         self.assertIn('<td>1</td>', html)

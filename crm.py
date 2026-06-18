@@ -19,6 +19,7 @@ MARKDOWN_EXTENSIONS = [
     'markdown.extensions.extra',
     'markdown.extensions.sane_lists',
 ]
+MARKDOWN_TAB_LENGTH = 2
 
 
 class CrmCase(osv.osv):
@@ -342,7 +343,10 @@ class CrmCase(osv.osv):
                 "<br>" not in html
         ):
             html = normalize_markdown_image_descriptions(html)
-            html = markdown(html, extensions=MARKDOWN_EXTENSIONS)
+            html = markdown(
+                html, extensions=MARKDOWN_EXTENSIONS,
+                tab_length=MARKDOWN_TAB_LENGTH
+            )
         return html
 
     def format_mails(self, cursor, uid, case, context=None):
