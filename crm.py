@@ -15,6 +15,12 @@ from qreu.address import getaddresses
 from .markdown_utils import normalize_markdown_image_descriptions
 
 
+MARKDOWN_EXTENSIONS = [
+    'markdown.extensions.extra',
+    'markdown.extensions.sane_lists',
+]
+
+
 class CrmCase(osv.osv):
     """Adding poweremail features.
     """
@@ -328,13 +334,15 @@ class CrmCase(osv.osv):
         return list(set(emails+watchers_bcc+context.get('email_bcc', [])))
 
     def parse_body_markdown(self, html):
+        if not html:
+            return html
         if (
                 html.strip()[0] != '<' and
                 "<br/>" not in html and
                 "<br>" not in html
         ):
             html = normalize_markdown_image_descriptions(html)
-            html = markdown(html)
+            html = markdown(html, extensions=MARKDOWN_EXTENSIONS)
         return html
 
     def format_mails(self, cursor, uid, case, context=None):

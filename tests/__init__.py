@@ -635,6 +635,36 @@ class TestCRMPoweremail(testing.OOTestCase):
         self.assertNotIn('Logotipo, nombre de la empresa\n', html)
         self.assertNotIn('Icono\n', html)
 
+    def test_parse_body_markdown_extended_format(self):
+        """Test markdown parsing for editor-supported rich text."""
+        self.logger.info('Testing extended markdown body rendering')
+        case_obj = self.pool.get('crm.case')
+
+        markdown_text = (
+            '**Bold** and _italic_\n\n'
+            '- Parent\n'
+            '  - Child\n\n'
+            '| Col A | Col B |\n'
+            '| ----- | ----- |\n'
+            '| 1     | 2     |\n\n'
+            '```python\n'
+            'print("ok")\n'
+            '```'
+        )
+        html = case_obj.parse_body_markdown(markdown_text)
+
+        self.assertIn('<strong>Bold</strong>', html)
+        self.assertIn('<em>italic</em>', html)
+        self.assertIn('<ul>', html)
+        self.assertIn('<li>Parent', html)
+        self.assertIn('<li>Child</li>', html)
+        self.assertIn('<table>', html)
+        self.assertIn('<th>Col A</th>', html)
+        self.assertIn('<td>1</td>', html)
+        self.assertIn('<pre><code', html)
+        self.assertIn('print(&quot;ok&quot;)', html)
+        self.assertEqual(case_obj.parse_body_markdown(''), '')
+
     def test_incoming_html_inline_images_keep_text_by_default(self):
         """Test HTML conversion is disabled by default for CRM mail."""
         self.logger.info('Testing incoming inline images opt-in config')
