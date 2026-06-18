@@ -1,45 +1,13 @@
 # coding=utf-8
-from destral import testing
+from destral.testing import OOTestCase
 from destral.transaction import Transaction
 
+import email
 import logging
-import os
-import time
-import unittest
+import re
 
 
-class TestPoweremailDateMail(unittest.TestCase):
-    def test_date_mail_from_message_uses_localtime(self):
-        if not hasattr(time, 'tzset'):
-            return
-
-        from poweremail_mailbox import date_mail_from_message_localtime
-
-        old_tz = os.environ.get('TZ')
-        os.environ['TZ'] = 'Europe/Madrid'
-        time.tzset()
-        try:
-            raw_message = (
-                'From: customer@example.com\r\n'
-                'To: section@example.com\r\n'
-                'Subject: Date Localtime\r\n'
-                'Date: Thu, 8 Oct 2009 09:35:42 -0000\r\n'
-                '\r\n'
-                'Testing date localtime\r\n'
-            )
-            self.assertEqual(
-                date_mail_from_message_localtime(raw_message),
-                '2009-10-08 11:35:42'
-            )
-        finally:
-            if old_tz is None:
-                os.environ.pop('TZ', None)
-            else:
-                os.environ['TZ'] = old_tz
-            time.tzset()
-
-
-class TestCRMPoweremail(testing.OOTestCase):
+class TestCRMPoweremail(OOTestCase):
     def setUp(self):
         self.txn = Transaction().start(self.database)
         self.logger = logging.getLogger(__name__)
@@ -52,6 +20,25 @@ class TestCRMPoweremail(testing.OOTestCase):
 
     def tearDown(self):
         self.txn.stop()
+
+    def test_date_mail_from_message_uses_postgresql_timezone(self):
+        from crm_poweremail.poweremail_mailbox import (
+            date_mail_from_message_localtime
+        )
+
+        self.cursor.execute("SET LOCAL TIME ZONE 'Europe/Madrid'")
+        raw_message = (
+            'From: customer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: Date Localtime\r\n'
+            'Date: Thu, 8 Oct 2009 09:35:42 -0000\r\n'
+            '\r\n'
+            'Testing date localtime\r\n'
+        )
+        self.assertEqual(
+            date_mail_from_message_localtime(self.cursor, raw_message),
+            '2009-10-08 11:35:42'
+        )
     
     def _create_base_test_data(self):
         """Create base test data: partner, address, user address, section"""
@@ -383,3 +370,461 @@ class TestCRMPoweremail(testing.OOTestCase):
         case = case_obj.browse(self.cursor, self.uid, case_id)
         cc_addr_ids = [addr.id for addr in case.cc_address_ids]
         self.assertIn(self.test_user_address_id, cc_addr_ids)
+
+    def test_email_send_moves_markdown_case_attachments(self):
+        """Test markdown attachment links are sent with the email."""
+        self.logger.info('Testing email_send moves markdown attachments')
+        case_obj = self.pool.get('crm.case')
+        attachment_obj = self.pool.get('ir.attachment')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Markdown Attachments',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        case_id = case_obj.create(self.cursor, self.uid, {
+            'name': 'Test Case With Markdown Attachment',
+            'section_id': self.test_section_id,
+            'user_id': self.uid,
+        })
+        other_case_id = case_obj.create(self.cursor, self.uid, {
+            'name': 'Other Test Case',
+            'section_id': self.test_section_id,
+            'user_id': self.uid,
+        })
+        attachment_id = attachment_obj.create(self.cursor, self.uid, {
+            'datas_fname': 'case-file.txt',
+            'name': 'case-file.txt',
+            'datas': 'Q2FzZSBmaWxl',
+            'res_model': 'crm.case',
+            'res_id': case_id,
+        })
+        other_attachment_id = attachment_obj.create(self.cursor, self.uid, {
+            'datas_fname': 'other-file.txt',
+            'name': 'other-file.txt',
+            'datas': 'T3RoZXIgZmlsZQ==',
+            'res_model': 'crm.case',
+            'res_id': other_case_id,
+        })
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+        body = (
+            'Resposta amb adjunt [](attachment://{0}) '
+            'i un adjunt alie [](attachment://{1})'
+        ).format(attachment_id, other_attachment_id)
+
+        case_obj.email_send(
+            self.cursor, self.uid, case, ['customer@example.com'], body)
+
+        mailbox_ids = mailbox_obj.search(self.cursor, self.uid, [
+            ('conversation_id', '=', case.conversation_id.id),
+            ('folder', '=', 'outbox')
+        ])
+        mailbox = mailbox_obj.browse(self.cursor, self.uid, mailbox_ids[0])
+        mailbox_attachment_ids = [
+            attachment.id for attachment in mailbox.pem_attachments_ids
+        ]
+
+        self.assertIn(attachment_id, mailbox_attachment_ids)
+        self.assertNotIn(other_attachment_id, mailbox_attachment_ids)
+
+        attachment = attachment_obj.browse(
+            self.cursor, self.uid, attachment_id)
+        self.assertEqual(attachment.res_model, 'poweremail.mailbox')
+        self.assertEqual(attachment.res_id, mailbox.id)
+
+        other_attachment = attachment_obj.browse(
+            self.cursor, self.uid, other_attachment_id)
+        self.assertEqual(other_attachment.res_model, 'crm.case')
+        self.assertEqual(other_attachment.res_id, other_case_id)
+
+    def test_email_send_sends_markdown_images_inline(self):
+        """Test markdown image attachments are sent as inline MIME parts."""
+        self.logger.info('Testing markdown images are sent inline')
+        from mock import patch
+        from qreu.sendcontext import Sender
+
+        class CaptureSender(Sender):
+            def __init__(self):
+                super(CaptureSender, self).__init__()
+                self.mime_string = None
+
+            def sendmail(self, mail):
+                self.mime_string = mail.mime_string
+                return True
+
+        case_obj = self.pool.get('crm.case')
+        attachment_obj = self.pool.get('ir.attachment')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Markdown Inline Images',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        case_id = case_obj.create(self.cursor, self.uid, {
+            'name': 'Test Case With Markdown Inline Image',
+            'section_id': self.test_section_id,
+            'user_id': self.uid,
+        })
+        attachment_id = attachment_obj.create(self.cursor, self.uid, {
+            'datas_fname': 'logo.png',
+            'name': 'logo.png',
+            'datas': 'iVBORw0KGgo=',
+            'res_model': 'crm.case',
+            'res_id': case_id,
+        })
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+
+        case_obj.email_send(
+            self.cursor, self.uid, case, ['customer@example.com'],
+            'Resposta amb imatge ![Logo](attachment://{0})'.format(
+                attachment_id
+            )
+        )
+
+        mailbox_ids = mailbox_obj.search(self.cursor, self.uid, [
+            ('conversation_id', '=', case.conversation_id.id),
+            ('folder', '=', 'outbox')
+        ])
+        mailbox = mailbox_obj.browse(self.cursor, self.uid, mailbox_ids[0])
+        sender = CaptureSender()
+
+        with patch.object(account_obj, 'get_sender', return_value=sender):
+            mailbox_obj.send_this_mail(self.cursor, self.uid, [mailbox.id])
+
+        message = email.message_from_string(sender.mime_string)
+        self.assertEqual(message.get_content_type(), 'multipart/related')
+        html_parts = [
+            part.get_payload(decode=True).decode(
+                part.get_content_charset() or 'utf-8'
+            )
+            for part in message.walk()
+            if part.get_content_type() == 'text/html'
+        ]
+        inline_parts = [
+            part for part in message.walk()
+            if part.get('Content-ID') ==
+            '<poweremail-attachment-{0}@local>'.format(attachment_id)
+        ]
+
+        self.assertEqual(len(html_parts), 1)
+        self.assertIn(
+            'src="cid:poweremail-attachment-{0}@local"'.format(
+                attachment_id
+            ),
+            html_parts[0]
+        )
+        self.assertFalse(re.search(r'attachment://{0}'.format(attachment_id),
+                                   html_parts[0]))
+        self.assertEqual(len(inline_parts), 1)
+        self.assertEqual(
+            inline_parts[0].get('Content-Disposition'),
+            'inline; filename="logo.png"'
+        )
+
+    def test_incoming_html_inline_images_are_markdown_attachments(self):
+        """Test incoming HTML images reference saved attachments in markdown."""
+        self.logger.info('Testing incoming inline images in markdown')
+        from mock import patch
+
+        conf_obj = self.pool.get('res.config')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Inline Images',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Inline Image Conversation'
+        })
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: HTML inline image\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: multipart/related; boundary="BOUNDARY"\r\n'
+            '\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '<html><body><p>Hello <strong>CRM</strong></p>'
+            '<p><img alt="Logo\n\nDescripción generada automáticamente" '
+            'src="cid:logo%40example.com"></p>'
+            '</body></html>\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: image/png; name="logo.png"\r\n'
+            'Content-Transfer-Encoding: base64\r\n'
+            'Content-ID: <logo@example.com>\r\n'
+            'Content-Disposition: inline; filename="logo.png"\r\n'
+            '\r\n'
+            'iVBORw0KGgo=\r\n'
+            '--BOUNDARY--\r\n'
+        )
+
+        with conf_obj.ResConfigPatch({
+                'crm_poweremail_markdown_inline_images': '1'
+        }), patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
+            mailbox_obj.create(self.cursor, self.uid, {
+                'pem_from': 'newcustomer@example.com',
+                'pem_to': 'section@example.com',
+                'pem_subject': 'HTML inline image',
+                'pem_body_text': 'fallback text',
+                'pem_body_html': (
+                    '<html><body><p>Hello <strong>CRM</strong></p>'
+                    '<p><img alt="Logo\n\n'
+                    'Descripción generada automáticamente" '
+                    'src="cid:logo%40example.com"></p>'
+                    '</body></html>'
+                ),
+                'pem_account_id': account_id,
+                'conversation_id': conv_id,
+                'folder': 'inbox',
+                'pem_mail_orig': raw_email,
+            })
+
+            self.assertTrue(mock_create_case.called)
+            args, kwargs = mock_create_case.call_args
+            pmail_id = args[2]
+            p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+            attachment_id = p_mail.pem_attachments_ids[0].id
+            body_text = kwargs['body_text']
+
+            self.assertIn('Hello **CRM**', body_text)
+            self.assertIn(
+                '![Logo Descripción generada automáticamente]'
+                '(attachment://{0})'.format(attachment_id),
+                body_text
+            )
+            self.assertNotIn('Logo\n\nDescripción', body_text)
+            self.assertFalse(re.search(r'cid:logo%40example.com', body_text))
+
+    def test_markdown_image_descriptions_strip_newlines(self):
+        """Test image markdown descriptions are kept on a single line."""
+        self.logger.info('Testing markdown image descriptions')
+        case_obj = self.pool.get('crm.case')
+        markdown_text = (
+            'Gracias\n\n'
+            '![Logotipo, nombre de la empresa\n\n'
+            'Descripción generada automáticamente](attachment://297676)_\n\n'
+            '_\n\n'
+            '![Icono\n\n'
+            'Descripción generada automáticamente](attachment://297678)__**_'
+            'Departamento de\nIngeniería'
+        )
+        html = case_obj.parse_body_markdown(markdown_text)
+
+        self.assertIn(
+            'Logotipo, nombre de la empresa Descripción generada '
+            'automáticamente',
+            html
+        )
+        self.assertIn(
+            'Icono Descripción generada automáticamente',
+            html
+        )
+        self.assertNotIn('Logotipo, nombre de la empresa\n', html)
+        self.assertNotIn('Icono\n', html)
+
+    def test_incoming_html_inline_images_keep_text_by_default(self):
+        """Test HTML conversion is disabled by default for CRM mail."""
+        self.logger.info('Testing incoming inline images opt-in config')
+        from mock import patch
+
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Inline Images Disabled',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Inline Image Disabled Conversation'
+        })
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: HTML inline image disabled\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: multipart/related; boundary="BOUNDARY"\r\n'
+            '\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '<html><body><p>Hello <strong>CRM</strong></p>'
+            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '</body></html>\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: image/png; name="logo.png"\r\n'
+            'Content-Transfer-Encoding: base64\r\n'
+            'Content-ID: <logo@example.com>\r\n'
+            'Content-Disposition: inline; filename="logo.png"\r\n'
+            '\r\n'
+            'iVBORw0KGgo=\r\n'
+            '--BOUNDARY--\r\n'
+        )
+
+        with patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
+            mailbox_obj.create(self.cursor, self.uid, {
+                'pem_from': 'newcustomer@example.com',
+                'pem_to': 'section@example.com',
+                'pem_subject': 'HTML inline image disabled',
+                'pem_body_text': 'fallback text',
+                'pem_body_html': (
+                    '<html><body><p>Hello <strong>CRM</strong></p>'
+                    '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+                    '</body></html>'
+                ),
+                'pem_account_id': account_id,
+                'conversation_id': conv_id,
+                'folder': 'inbox',
+                'pem_mail_orig': raw_email,
+            })
+
+            self.assertTrue(mock_create_case.called)
+            args, kwargs = mock_create_case.call_args
+            pmail_id = args[2]
+            p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+
+            self.assertEqual(p_mail.pem_body_text, 'fallback text')
+            self.assertEqual(kwargs['body_text'], 'fallback text')
+
+    def test_incoming_html_email_autolinks_are_mdx_safe(self):
+        """Test Markdown email autolinks do not break the MDX editor."""
+        self.logger.info('Testing incoming email autolinks are MDX safe')
+        from mock import patch
+
+        conf_obj = self.pool.get('res.config')
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Email Autolinks',
+            'email_id': 'section@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Email Autolink Conversation'
+        })
+        html_body = (
+            '<html><body><p>Contacte &lt;suport@example.com&gt;</p>'
+            '<p>Resposta del client.</p></body></html>'
+        )
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: HTML email autolink\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '{0}\r\n'
+        ).format(html_body)
+
+        with conf_obj.ResConfigPatch({
+                'crm_poweremail_markdown_inline_images': '1'
+        }), patch.object(mailbox_obj, 'create_crm_case') as mock_create_case:
+            mailbox_obj.create(self.cursor, self.uid, {
+                'pem_from': 'newcustomer@example.com',
+                'pem_to': 'section@example.com',
+                'pem_subject': 'HTML email autolink',
+                'pem_body_text': 'fallback text',
+                'pem_body_html': html_body,
+                'pem_account_id': account_id,
+                'conversation_id': conv_id,
+                'folder': 'inbox',
+                'pem_mail_orig': raw_email,
+            })
+
+            self.assertTrue(mock_create_case.called)
+            args, kwargs = mock_create_case.call_args
+            pmail_id = args[2]
+            p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+            body_text = kwargs['body_text']
+
+            self.assertEqual(p_mail.pem_body_text, body_text)
+            self.assertIn('suport@example.com', body_text)
+            self.assertNotIn('<suport@example.com>', body_text)
+
+    def test_non_crm_html_mail_keeps_original_body_text(self):
+        """Test HTML conversion does not mutate mail outside CRM sections."""
+        self.logger.info('Testing non CRM HTML mail body is not rewritten')
+
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        conv_obj = self.pool.get('poweremail.conversation')
+        account_obj = self.pool.get('poweremail.core_accounts')
+
+        account_id = account_obj.create(self.cursor, self.uid, {
+            'name': 'Test Account Non CRM Inline Images',
+            'email_id': 'other@example.com',
+            'user': self.uid,
+            'smtpserver': 'smtp.example.com',
+            'smtpport': 587,
+            'company': 'no',
+        })
+        conv_id = conv_obj.create(self.cursor, self.uid, {
+            'name': 'Non CRM Inline Image Conversation'
+        })
+        raw_email = (
+            'From: newcustomer@example.com\r\n'
+            'To: other@example.com\r\n'
+            'Subject: HTML non CRM inline image\r\n'
+            'MIME-Version: 1.0\r\n'
+            'Content-Type: multipart/related; boundary="BOUNDARY"\r\n'
+            '\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: text/html; charset="utf-8"\r\n'
+            '\r\n'
+            '<html><body><p>Hello <strong>outside CRM</strong></p>'
+            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '</body></html>\r\n'
+            '--BOUNDARY\r\n'
+            'Content-Type: image/png; name="logo.png"\r\n'
+            'Content-Transfer-Encoding: base64\r\n'
+            'Content-ID: <logo@example.com>\r\n'
+            'Content-Disposition: inline; filename="logo.png"\r\n'
+            '\r\n'
+            'iVBORw0KGgo=\r\n'
+            '--BOUNDARY--\r\n'
+        )
+
+        pmail_id = mailbox_obj.create(self.cursor, self.uid, {
+            'pem_from': 'newcustomer@example.com',
+            'pem_to': 'other@example.com',
+            'pem_subject': 'HTML non CRM inline image',
+            'pem_body_text': 'fallback text',
+            'pem_body_html': (
+                '<html><body><p>Hello <strong>outside CRM</strong></p>'
+                '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+                '</body></html>'
+            ),
+            'pem_account_id': account_id,
+            'conversation_id': conv_id,
+            'folder': 'inbox',
+            'pem_mail_orig': raw_email,
+        })
+
+        p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
+        self.assertEqual(p_mail.pem_body_text, 'fallback text')

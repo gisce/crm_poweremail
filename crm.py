@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from datetime import datetime
 from email.utils import make_msgid
+import re
 from mako.template import Template
 
 from markdown import markdown
@@ -10,6 +11,8 @@ from tools.translate import _
 from tools import config
 from qreu import address as qaddress
 from qreu.address import getaddresses
+
+from .markdown_utils import normalize_markdown_image_descriptions
 
 
 class CrmCase(osv.osv):
@@ -330,6 +333,7 @@ class CrmCase(osv.osv):
                 "<br/>" not in html and
                 "<br>" not in html
         ):
+            html = normalize_markdown_image_descriptions(html)
             html = markdown(html)
         return html
 
@@ -343,6 +347,35 @@ class CrmCase(osv.osv):
             res = list(set([ '"{}" <{}>'.format(cc[0], cc[1])  for cc in addresses]))
 
         return res
+
+    def _get_markdown_attachment_ids(self, cursor, uid, case, body,
+                                     context=None):
+        """Return attachment IDs referenced in the editor markdown body."""
+        if context is None:
+            context = {}
+        if not body:
+            return []
+
+        attachment_ids = []
+        for attachment_id in re.findall(r'attachment://(\d+)', body):
+            attachment_id = int(attachment_id)
+            if attachment_id not in attachment_ids:
+                attachment_ids.append(attachment_id)
+
+        if not attachment_ids:
+            return []
+
+        attachment_obj = self.pool.get('ir.attachment')
+        allowed_ids = attachment_obj.search(cursor, uid, [
+            ('id', 'in', attachment_ids),
+            ('res_model', '=', self._name),
+            ('res_id', '=', case.id),
+        ], context=context)
+        allowed_ids = set(allowed_ids)
+        return [
+            attachment_id for attachment_id in attachment_ids
+            if attachment_id in allowed_ids
+        ]
 
     def email_send(self, cursor, uid, case, emails, body, context=None):
         """Using poweremail to send mails.
@@ -409,7 +442,12 @@ class CrmCase(osv.osv):
             'reference': 'crm.case,{}'.format(case.id),
         })
 
-        attachment_ids = context.get('attachment_ids', [])
+        attachment_ids = list(context.get('attachment_ids', []))
+        markdown_attachment_ids = self._get_markdown_attachment_ids(
+            cursor, uid, case, body, context=context)
+        for attachment_id in markdown_attachment_ids:
+            if attachment_id not in attachment_ids:
+                attachment_ids.append(attachment_id)
         if attachment_ids:
             pm_mailbox_obj.write(cursor, uid, [pm_mail_id], {
                 'pem_attachments_ids': [(6, 0, attachment_ids)]
