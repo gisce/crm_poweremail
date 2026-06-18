@@ -915,6 +915,7 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
             raw_email = f.read()
         if not isinstance(raw_email, str):
             raw_email = raw_email.decode('iso-8859-1')
+        self.cursor.execute("SET LOCAL TIME ZONE 'Europe/Madrid'")
         email_id = self.create_email_case(raw_email)
 
         email = pem_obj.browse(self.cursor, self.uid, email_id)
@@ -922,6 +923,7 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
             ('conversation_id', '=', email.conversation_id.id)
         ])
         self.assertEqual(len(case_ids), 1)
+        self.assertEqual(email.date_mail, '2025-07-16 13:14:11')
         case = case_obj.browse(self.cursor, self.uid, case_ids[0])
         self.assertEqual(case.name, email.pem_subject)
         self.assertEqual(case.email_from, email.pem_from)
