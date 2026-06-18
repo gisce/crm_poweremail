@@ -1,5 +1,5 @@
 # coding=utf-8
-from destral.testing import OOTestCase
+from destral import testing
 from destral.transaction import Transaction
 
 import email
@@ -7,7 +7,7 @@ import logging
 import re
 
 
-class TestCRMPoweremail(OOTestCase):
+class TestCRMPoweremail(testing.OOTestCase):
     def setUp(self):
         self.txn = Transaction().start(self.database)
         self.logger = logging.getLogger(__name__)
