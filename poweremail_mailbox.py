@@ -9,6 +9,9 @@ from html2text import html2text
 from lxml import html as lxml_html
 import email as email_parser
 import re
+
+from .markdown_utils import normalize_markdown_image_descriptions
+
 try:
     from urllib.parse import unquote
 except ImportError:
@@ -305,7 +308,10 @@ class PoweremailMailboxCRM(osv.osv):
             html_body = _replace_inline_image_sources(
                 html_body, attachment_map
             )
-            return _escape_mdx_email_autolinks(html2text(html_body).strip())
+            markdown_body = normalize_markdown_image_descriptions(
+                html2text(html_body).strip()
+            )
+            return _escape_mdx_email_autolinks(markdown_body)
         return p_mail.pem_body_text or mail.body_parts.get('plain') or ''
 
     def _markdown_inline_images_enabled(self, cursor, uid):

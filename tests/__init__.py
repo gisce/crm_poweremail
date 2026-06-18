@@ -544,7 +544,8 @@ class TestCRMPoweremail(testing.OOTestCase):
             'Content-Type: text/html; charset="utf-8"\r\n'
             '\r\n'
             '<html><body><p>Hello <strong>CRM</strong></p>'
-            '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+            '<p><img alt="Logo\n\nDescripción generada automáticamente" '
+            'src="cid:logo%40example.com"></p>'
             '</body></html>\r\n'
             '--BOUNDARY\r\n'
             'Content-Type: image/png; name="logo.png"\r\n'
@@ -566,7 +567,9 @@ class TestCRMPoweremail(testing.OOTestCase):
                 'pem_body_text': 'fallback text',
                 'pem_body_html': (
                     '<html><body><p>Hello <strong>CRM</strong></p>'
-                    '<p><img alt="Logo" src="cid:logo%40example.com"></p>'
+                    '<p><img alt="Logo\n\n'
+                    'Descripción generada automáticamente" '
+                    'src="cid:logo%40example.com"></p>'
                     '</body></html>'
                 ),
                 'pem_account_id': account_id,
@@ -584,10 +587,39 @@ class TestCRMPoweremail(testing.OOTestCase):
 
             self.assertIn('Hello **CRM**', body_text)
             self.assertIn(
-                '![Logo](attachment://{0})'.format(attachment_id),
+                '![Logo Descripción generada automáticamente]'
+                '(attachment://{0})'.format(attachment_id),
                 body_text
             )
+            self.assertNotIn('Logo\n\nDescripción', body_text)
             self.assertFalse(re.search(r'cid:logo%40example.com', body_text))
+
+    def test_markdown_image_descriptions_strip_newlines(self):
+        """Test image markdown descriptions are kept on a single line."""
+        self.logger.info('Testing markdown image descriptions')
+        case_obj = self.pool.get('crm.case')
+        markdown_text = (
+            'Gracias\n\n'
+            '![Logotipo, nombre de la empresa\n\n'
+            'Descripción generada automáticamente](attachment://297676)_\n\n'
+            '_\n\n'
+            '![Icono\n\n'
+            'Descripción generada automáticamente](attachment://297678)__**_'
+            'Departamento de\nIngeniería'
+        )
+        html = case_obj.parse_body_markdown(markdown_text)
+
+        self.assertIn(
+            'Logotipo, nombre de la empresa Descripción generada '
+            'automáticamente',
+            html
+        )
+        self.assertIn(
+            'Icono Descripción generada automáticamente',
+            html
+        )
+        self.assertNotIn('Logotipo, nombre de la empresa\n', html)
+        self.assertNotIn('Icono\n', html)
 
     def test_incoming_html_inline_images_keep_text_by_default(self):
         """Test HTML conversion is disabled by default for CRM mail."""

@@ -12,6 +12,8 @@ from tools import config
 from qreu import address as qaddress
 from qreu.address import getaddresses
 
+from .markdown_utils import normalize_markdown_image_descriptions
+
 
 class CrmCase(osv.osv):
     """Adding poweremail features.
@@ -331,6 +333,7 @@ class CrmCase(osv.osv):
                 "<br/>" not in html and
                 "<br>" not in html
         ):
+            html = normalize_markdown_image_descriptions(html)
             html = markdown(html)
         return html
 
