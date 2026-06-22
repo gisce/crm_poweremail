@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from oopgrade.oopgrade import MigrationHelper
 from tools import config
+from tools.translate import trans_load
 
 
 def up(cursor, installed_version):
@@ -19,6 +20,8 @@ def up(cursor, installed_version):
         'crm_poweremail_rule_auto_close_from_open',
     ]
     mh.update_xml_records(xml_path=file, init_record_ids=views)
+    trans_load(cursor, '{}/{}/i18n/ca_ES.po'.format(config['addons_path'], module), 'ca_ES')
+    trans_load(cursor, '{}/{}/i18n/es_ES.po'.format(config['addons_path'], module), 'es_ES')
 
 
 def down(cursor, installed_version):

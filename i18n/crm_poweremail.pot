@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenERP Server 5.0.14\n"
 "Report-Msgid-Bugs-To: support@openerp.com\n"
-"POT-Creation-Date: 2018-02-20 08:47\n"
-"PO-Revision-Date: 2018-02-20 08:47\n"
+"POT-Creation-Date: 2026-06-22 16:43\n"
+"PO-Revision-Date: 2026-06-22 16:43\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -29,20 +29,20 @@ msgid "\n"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:237
+#: code:addons/crm_poweremail/crm.py:582
 #, python-format
 msgid "Poweremail template \"Email BCC\" has bad formatted address"
 msgstr ""
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_new
-msgid "\n"
-"In date ${date_now} we have recieved the case with the subject: ${object.name}\n"
-"Case Identifier: #${object.id}\n"
-"\n"
-"Waiting for a responsible to take over the case.\n"
-"\n"
-"            "
+#: view:crm.case:0
+msgid "Case-Related Attachments"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:381
+#, python-format
+msgid "Missing Poweremail-Account with Reply-To of the Case Section."
 msgstr ""
 
 #. module: crm_poweremail
@@ -51,7 +51,30 @@ msgid "Poweremail Template"
 msgstr ""
 
 #. module: crm_poweremail
+#: field:wizard.log.reply.attachment,filename_1:0
+#: field:wizard.log.reply.attachment,filename_2:0
+#: field:wizard.log.reply.attachment,filename_3:0
+#: field:wizard.log.reply.attachment,filename_4:0
+#: field:wizard.log.reply.attachment,filename_5:0
+msgid "Filename"
+msgstr ""
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_new
+msgid "\n"
+"In date ${date_now} we have recieved the case with the subject: ${object.name}\n"
+"\n"
+"- Case Identifier: #${object.id}\n"
+"\n"
+"Waiting for a responsible to take over the case.\n"
+"\n"
+"            "
+msgstr ""
+
+#. module: crm_poweremail
 #: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close_automatically_open
+#: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_close_automatically_pending
 #: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_new
 #: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_open
 #: model:poweremail.templates,def_subject:crm_poweremail.crm_poweremail_case_template_pending
@@ -59,10 +82,44 @@ msgid "${object.name}"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/poweremail_mailbox.py:165
-#: code:addons/crm_poweremail/poweremail_mailbox.py:174
+#: code:addons/crm_poweremail/wizard/wizard_log_reply_with_attachment.py:68
+#, python-format
+msgid "From CRM case [{}] {}"
+msgstr ""
+
+#. module: crm_poweremail
+#: constraint:ir.actions.act_window:0
+msgid "Invalid model name in the action definition."
+msgstr ""
+
+#. module: crm_poweremail
+#: view:crm.case:0
+#: field:crm.case,bcc_address_ids:0
+msgid "Secret Watchers Addresses (BCC)"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/poweremail_mailbox.py:176
+#: code:addons/crm_poweremail/poweremail_mailbox.py:187
 #, python-format
 msgid "Reply"
+msgstr ""
+
+#. module: crm_poweremail
+#: field:crm.case,attachment_ids:0
+msgid "Adjuntos relacionados"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:439
+#, python-format
+msgid "You must put a Partner eMail to use this action!"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:crm.case:0
+#: field:crm.case,cc_address_ids:0
+msgid "Watchers Addresses (CC)"
 msgstr ""
 
 #. module: crm_poweremail
@@ -71,8 +128,62 @@ msgid "Conversations"
 msgstr ""
 
 #. module: crm_poweremail
+#: constraint:ir.model:0
+msgid "The Object name must start with x_ and not contain any special character !"
+msgstr ""
+
+#. module: crm_poweremail
 #: field:crm.case,conversation_mails:0
 msgid "unknown"
+msgstr ""
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close_automatically_open
+msgid "\n"
+"<%\n"
+"    rule_obj = pool.get('crm.case.rule')\n"
+"    imd_obj = pool.get('ir.model.data')\n"
+"    rule_id = imd_obj.get_object_reference(cursor, uid, 'crm_poweremail', 'crm_poweremail_rule_auto_close_from_open')[1]\n"
+"    days_passed = int(rule_obj.simple_browse(cursor, uid, rule_id).trg_date_range)\n"
+"%>\n"
+"\n"
+"Hello ${object.partner_id.name},\n"
+"\n"
+"We closed the case #${object.id} because more than ${days_passed} days have passed without activity.\n"
+"\n"
+"If the issue is already resolved, you don't need to do anything. If you still need help, please reply to this email.\n"
+"\n"
+"Best regards,\n"
+"The GISCE-TI team\n"
+"         "
+msgstr ""
+
+#. module: crm_poweremail
+#: field:crm.case,email_bcc:0
+msgid "Secret Watchers Emails"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:446
+#, python-format
+msgid "Can not send mail with empty body,you should have description in the body"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:248
+#, python-format
+msgid "You do not have an address!"
+msgstr ""
+
+#. module: crm_poweremail
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
+msgid "\n"
+"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
+"\n"
+"- Case Identifier: #${object.id}\n"
+"- Responsible: ${object.user_id.name} <${object.user_id.address_id.email}>\n"
+"\n"
+"            "
 msgstr ""
 
 #. module: crm_poweremail
@@ -81,9 +192,24 @@ msgid "E-Mail Actions"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:161
+#: model:ir.actions.act_window,name:crm_poweremail.action_wizard_log_reply_attachment_form
+msgid "Send case with attachment"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:crm.case:0
+msgid "Watch this case"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:464
 #, python-format
 msgid "No E-Mail ID Found for your Company address!"
+msgstr ""
+
+#. module: crm_poweremail
+#: field:wizard.log.reply.attachment,info:0
+msgid "Info"
 msgstr ""
 
 #. module: crm_poweremail
@@ -92,32 +218,55 @@ msgid "Invalid XML for View Architecture!"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/poweremail_mailbox.py:41
-#, python-format
-msgid "Could not parse poweremail_mailbox pem_from address with qreu"
+#: view:crm.case:0
+msgid "Watchers"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:219
+#: code:addons/crm_poweremail/wizard/wizard_log_reply_with_attachment.py:81
+#, python-format
+msgid "User error"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:564
 #, python-format
 msgid "Poweremail template \"Email TO\" has bad formatted address"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:144
-#, python-format
-msgid "Can not send mail with empty body,you should have description in the body"
+#: view:wizard.log.reply.attachment:0
+msgid "Attachment 3"
 msgstr ""
 
 #. module: crm_poweremail
-#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_open
-msgid "\n"
-"In date ${date_now} the case has been Opened with the subject: ${object.name}\n"
-"Case Identifier: #${object.id}\n"
-"\n"
-"Responsible: ${object.user_id.name} <${object.user_id.address_id.email}>\n"
-"\n"
-"            "
+#: view:wizard.log.reply.attachment:0
+msgid "Attachment 2"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:wizard.log.reply.attachment:0
+msgid "Attachment 1"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:crm.case:0
+msgid "Send Partner & Historize"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:wizard.log.reply.attachment:0
+msgid "Attachment 5"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:wizard.log.reply.attachment:0
+msgid "Attachment 4"
+msgstr ""
+
+#. module: crm_poweremail
+#: model:ir.model,name:crm_poweremail.model_wizard_log_reply_attachment
+msgid "wizard.log.reply.attachment"
 msgstr ""
 
 #. module: crm_poweremail
@@ -126,25 +275,35 @@ msgid "Conversation"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:96
-#, python-format
-msgid "No E-Mail ID Found in Power Email for this section or missing reply address in section."
-msgstr ""
-
-#. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:89
+#: code:addons/crm_poweremail/crm.py:374
 #, python-format
 msgid "No E-Mail ID Found for your Company address or missing reply address in section!"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:163
+#: view:wizard.log.reply.attachment:0
+msgid "Do you want to send attachment?"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:466
+#: view:wizard.log.reply.attachment:0
 #, python-format
 msgid "Send"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:140
+#: field:wizard.log.reply.attachment,case_id:0
+msgid "CRM case"
+msgstr ""
+
+#. module: crm_poweremail
+#: view:crm.case:0
+msgid "Assign to me"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:442
 #, python-format
 msgid "You must define a responsible user for this case in order to use this action!"
 msgstr ""
@@ -155,20 +314,34 @@ msgid "History"
 msgstr ""
 
 #. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:253
+#, python-format
+msgid "Your address does not have an email!"
+msgstr ""
+
+#. module: crm_poweremail
 #: model:ir.module.module,shortdesc:crm_poweremail.module_meta_information
 msgid "CRM Poweremail"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:88
-#: code:addons/crm_poweremail/crm.py:95
-#: code:addons/crm_poweremail/crm.py:136
-#: code:addons/crm_poweremail/crm.py:139
-#: code:addons/crm_poweremail/crm.py:143
-#: code:addons/crm_poweremail/crm.py:160
-#: code:addons/crm_poweremail/crm.py:219
-#: code:addons/crm_poweremail/crm.py:227
-#: code:addons/crm_poweremail/crm.py:237
+#: code:addons/crm_poweremail/wizard/wizard_log_reply_with_attachment.py:82
+#, python-format
+msgid "You are trying to send {}MB. The limit is {}MB"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:247
+#: code:addons/crm_poweremail/crm.py:252
+#: code:addons/crm_poweremail/crm.py:373
+#: code:addons/crm_poweremail/crm.py:380
+#: code:addons/crm_poweremail/crm.py:438
+#: code:addons/crm_poweremail/crm.py:441
+#: code:addons/crm_poweremail/crm.py:445
+#: code:addons/crm_poweremail/crm.py:463
+#: code:addons/crm_poweremail/crm.py:564
+#: code:addons/crm_poweremail/crm.py:572
+#: code:addons/crm_poweremail/crm.py:582
 #, python-format
 msgid "Error!"
 msgstr ""
@@ -194,15 +367,51 @@ msgid "PowerEmail Template"
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:137
-#, python-format
-msgid "You must put a Partner eMail to use this action!"
+#: model:poweremail.templates,def_body_text:crm_poweremail.crm_poweremail_case_template_close_automatically_pending
+msgid "\n"
+"<%\n"
+"    rule_obj = pool.get('crm.case.rule')\n"
+"    imd_obj = pool.get('ir.model.data')\n"
+"    rule_id = imd_obj.get_object_reference(cursor, uid, 'crm_poweremail', 'crm_poweremail_rule_auto_close_from_pending')[1]\n"
+"    days_passed = int(rule_obj.simple_browse(cursor, uid, rule_id).trg_date_range)\n"
+"%>\n"
+"\n"
+"Hello ${object.partner_id.name},\n"
+"\n"
+"We closed the case #${object.id} because more than ${days_passed} days have passed without activity.\n"
+"\n"
+"If the issue is already resolved, you don't need to do anything. If you still need help, please reply to this email.\n"
+"\n"
+"Best regards,\n"
+"The GISCE-TI team\n"
+"         "
 msgstr ""
 
 #. module: crm_poweremail
-#: code:addons/crm_poweremail/crm.py:227
+#: field:wizard.log.reply.attachment,file_1:0
+#: field:wizard.log.reply.attachment,file_2:0
+#: field:wizard.log.reply.attachment,file_3:0
+#: field:wizard.log.reply.attachment,file_4:0
+#: field:wizard.log.reply.attachment,file_5:0
+msgid "File"
+msgstr ""
+
+#. module: crm_poweremail
+#: model:ir.actions.act_window,name:crm_poweremail.action_sc_link_case_emails
+msgid "Conversation Emails"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/crm.py:572
 #, python-format
 msgid "Poweremail template \"Email CC\" has bad formatted address"
+msgstr ""
+
+#. module: crm_poweremail
+#: code:addons/crm_poweremail/wizard/wizard_log_reply_with_attachment.py:30
+#: view:wizard.log.reply.attachment:0
+#, python-format
+msgid "Select a file to send as an attachment"
 msgstr ""
 
 #. module: crm_poweremail
@@ -214,5 +423,10 @@ msgid "\n"
 "    NOTE: Needs poweremail with conversations suport.\n"
 "          See: https://github.com/openlabs/poweremail/issues/24\n"
 "    "
+msgstr ""
+
+#. module: crm_poweremail
+#: field:wizard.log.reply.attachment,add_attachment:0
+msgid "Send with attachment?"
 msgstr ""
 
