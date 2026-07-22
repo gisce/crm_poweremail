@@ -150,7 +150,9 @@ class TestPoweremailMailbox(testing.OOTestCase):
     def test_get_cases_ids_from_references(self):
         """Test extracting case IDs from message references"""
         self.logger.info('Testing get_cases_ids_from_references')
-        from poweremail_mailbox import get_cases_ids_from_references
+        from crm_poweremail.poweremail_mailbox import (
+            get_cases_ids_from_references
+        )
         
         # Test with valid references
         references = [
