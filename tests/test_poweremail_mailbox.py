@@ -509,7 +509,7 @@ class TestPoweremailMailbox(testing.OOTestCase):
         )
         # Mock only the automatic response: update_case_from_mail still stores
         # the incoming customer email in the case history.
-        with patch.object(template_obj, 'generate_mail_sync') as generate:
+        with patch.object(template_obj, 'generate_mail') as generate:
             # Already extracted data from the mail_source
             mailbox_obj.create(cursor, uid, {
                 'pem_from': 'customer@example.com',
@@ -527,6 +527,11 @@ class TestPoweremailMailbox(testing.OOTestCase):
         self.assertEqual(
             case.history_line[0].description, 'Closed case reply'
         )
+        if generate.called:
+            self.assertEqual(
+                generate.call_args[1]['context']['account_id'],
+                self.test_account_id,
+            )
         return generate
 
     def test_closed_case_with_template_body_sends_response(self):

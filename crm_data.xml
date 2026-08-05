@@ -81,6 +81,8 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
             <field name="lang" >${object.partner_id.lang}</field>
             <field name="template_language">mako</field>
             <field name="use_sign" eval="False"/>
+            <field name="use_filter" eval="False"/>
+            <field name="filter" eval="False"/>
             <field name="def_body_text"></field>
         </record>
 

@@ -297,8 +297,11 @@ class PoweremailMailboxCRM(osv.osv):
                 cursor, uid, template_id, ['def_body_text'], context=context
             )['def_body_text']
             if body:
-                template_obj.generate_mail_sync(
-                    cursor, uid, template_id, case['id'], context=context
+                mail_context = context.copy()
+                mail_context['account_id'] = p_mail.pem_account_id.id
+                template_obj.generate_mail(
+                    cursor, uid, template_id, case['id'],
+                    context=mail_context
                 )
 
         # 3.- Emails from CC, TO and FROM
