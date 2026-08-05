@@ -71,6 +71,18 @@ The case with identifier: #${object.id} with the subject: "${object.name}" has b
 
             </field>
         </record>
+        <record model="poweremail.templates" id="crm_poweremail_cannot_reopen_closed_case">
+            <field name="name">Cannot Reopen Closed Case Template</field>
+            <field name="object_name" model="ir.model" search="[('model', '=', 'crm.case')]"/>
+            <field name="def_to">${object.email_from}</field>
+            <field name="def_cc">${object.email_cc}</field>
+            <field name="def_bcc">${object.user_id.address_id.email}</field>
+            <field name="def_subject">${object.name}</field>
+            <field name="lang" >${object.partner_id.lang}</field>
+            <field name="template_language">mako</field>
+            <field name="use_sign" eval="False"/>
+            <field name="def_body_text"></field>
+        </record>
 
         <!-- CRM - Rules -->
         <record model="crm.case.rule" id="crm_poweremail_rule_new">

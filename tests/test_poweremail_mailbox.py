@@ -1,8 +1,17 @@
 # coding=utf-8
+from __future__ import absolute_import
+from ..poweremail_mailbox import get_cases_ids_from_references
 from destral import testing
 from destral.transaction import Transaction
-
+from tools.config import config
 import logging
+import six
+import qreu
+from qreu.sendcontext import Sender
+if six.PY2:
+    from mock import patch, MagicMock
+else:
+    from unittest.mock import patch, MagicMock
 
 
 class TestPoweremailMailbox(testing.OOTestCase):
@@ -15,9 +24,12 @@ class TestPoweremailMailbox(testing.OOTestCase):
         
         # Create base test data
         self._create_base_test_data()
+        self.origin_debug = config['debug_mode']
+        config['debug_mode'] = True
 
     def tearDown(self):
         self.txn.stop()
+        config['debug_mode'] = self.origin_debug
     
     def _create_base_test_data(self):
         """Create base test data: partner, address, section, account"""
@@ -49,6 +61,9 @@ class TestPoweremailMailbox(testing.OOTestCase):
             'name': 'Test Account',
             'email_id': 'section@example.com',
             'user': self.uid,
+            'company': 'no',
+            'smtpport': 1234,
+            'smtpserver': 'test.com',
         })
 
     def test_get_partner_address_from_email_existing(self):
@@ -131,6 +146,7 @@ class TestPoweremailMailbox(testing.OOTestCase):
             'pem_account_id': self.test_account_id,
             'conversation_id': conv_id,
             'folder': 'inbox',
+            'pem_mail_orig': ()
         })
         
         # Create CRM case from mail
@@ -150,7 +166,6 @@ class TestPoweremailMailbox(testing.OOTestCase):
     def test_get_cases_ids_from_references(self):
         """Test extracting case IDs from message references"""
         self.logger.info('Testing get_cases_ids_from_references')
-        from poweremail_mailbox import get_cases_ids_from_references
         
         # Test with valid references
         references = [
@@ -168,7 +183,7 @@ class TestPoweremailMailbox(testing.OOTestCase):
         self.assertIn(456, case_ids)
 
     def test_update_case_from_mail(self):
-        """Test updating existing case from mail"""
+        """Test that mailbox creation updates an existing case once."""
         self.logger.info('Testing update_case_from_mail')
         mailbox_obj = self.pool.get('poweremail.mailbox')
         case_obj = self.pool.get('crm.case')
@@ -184,7 +199,7 @@ class TestPoweremailMailbox(testing.OOTestCase):
         })
         
         # Create test mail with CC addresses
-        pmail_id = mailbox_obj.create(self.cursor, self.uid, {
+        mailbox_obj.create(self.cursor, self.uid, {
             'pem_from': 'customer@example.com',
             'pem_to': 'section@example.com',
             'pem_cc': 'watcher@example.com',
@@ -207,32 +222,15 @@ class TestPoweremailMailbox(testing.OOTestCase):
             )
         })
         
-        # Note: update_case_from_mail requires qreu.Email parsing
-        # which may not work in test environment without proper mail setup
-        # This test validates the method exists and can be called
-        try:
-            import qreu
-            mail = qreu.Email.parse(
-                mailbox_obj.browse(
-                    self.cursor, self.uid, pmail_id
-                ).pem_mail_orig
-            )
-            
-            mailbox_obj.update_case_from_mail(
-                self.cursor, self.uid, pmail_id, case_id, mail
-            )
-            
-            # Verify case was updated
-            case = case_obj.browse(self.cursor, self.uid, case_id)
-            self.assertEqual(case.description, 'This is a reply')
-        except ImportError:
-            self.logger.warning('qreu module not available, skipping mail parsing test')
+        case = case_obj.browse(self.cursor, self.uid, case_id)
+        self.assertEqual(case.description, False)
+        self.assertEqual(case.history_line[0].description, 'This is a reply\n\nOriginal message')
+        self.assertEqual(len(case.history_line), 2)
 
     def test_mailbox_create_sends_notification(self):
         """Test that creating mailbox from incoming email sends notification"""
         self.logger.info('Testing mailbox create sends notification')
-        from mock import patch, MagicMock
-        
+
         mailbox_obj = self.pool.get('poweremail.mailbox')
         case_obj = self.pool.get('crm.case')
         conv_obj = self.pool.get('poweremail.conversation')
@@ -289,8 +287,7 @@ class TestPoweremailMailbox(testing.OOTestCase):
     def test_mailbox_create_with_new_conversation(self):
         """Test that creating mailbox creates new case when no conversation exists"""
         self.logger.info('Testing mailbox create with new conversation')
-        from mock import patch, MagicMock
-        
+
         mailbox_obj = self.pool.get('poweremail.mailbox')
         conv_obj = self.pool.get('poweremail.conversation')
         
@@ -337,8 +334,7 @@ class TestPoweremailMailbox(testing.OOTestCase):
     def test_forward_case_response_notification(self):
         """Test that forward_case_response sends email to watchers"""
         self.logger.info('Testing forward_case_response notification')
-        from mock import MagicMock
-        
+
         mailbox_obj = self.pool.get('poweremail.mailbox')
         case_obj = self.pool.get('crm.case')
         address_obj = self.pool.get('res.partner.address')
@@ -387,11 +383,167 @@ class TestPoweremailMailbox(testing.OOTestCase):
         # Verify notification email was created
         notification_ids = mailbox_obj.search(self.cursor, self.uid, [
             ('conversation_id', '=', case.conversation_id.id),
-            ('pem_folder', '=', 'outbox'),
-            ('pem_to', 'ilike', 'watcher1@example.com')
+            ('folder', '=', 'outbox'),
+            '|',
+                ('pem_to', 'ilike', 'watcher1@example.com'),
+                ('pem_cc', 'ilike', 'watcher1@example.com')
         ])
         
-        self.assertTrue(len(notification_ids) > 0)
+        self.assertEqual(len(notification_ids), 1)
+        notification = mailbox_obj.read(
+            self.cursor, self.uid, notification_ids[0],
+            ['pem_from', 'pem_to', 'pem_cc', 'pem_body_text']
+        )
+
+        watchers = [notification['pem_to']]
+        for watcher in notification['pem_cc'].split(','):
+            watchers.append(watcher.strip())
+
+        self.assertEqual(notification['pem_from'], 'section@example.com')
+        self.assertIn('watcher1@example.com', watchers)
+        self.assertEqual(notification['pem_body_text'], 'Customer reply')
+
+    def test_crm_does_not_send_email_without_body(self):
+        cursor, uid, context = self.cursor,  self.uid, self.txn.context
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        case_obj = self.pool.get('crm.case')
+        imd_obj = self.pool.get('ir.model.data')
+        template_obj = self.pool.get('poweremail.templates')
+
+        template_id = imd_obj.get_object_reference(
+            cursor, uid, 'crm_poweremail',
+            'crm_poweremail_cannot_reopen_closed_case',
+        )[1]
+
+        ctx = context.copy()
+        ctx.update({'account_id': self.test_account_id})
+
+        case_id = case_obj.create(cursor, uid, {
+            'name': 'Test Case',
+            'email_from': 'test_email_from@email.com',
+            'section_id': self.test_section_id,
+            'state': 'done',
+        }, context=ctx)
+
+        mailbox_id = template_obj.generate_mail_sync(cursor, uid, template_id, case_id, context=ctx)
+        with patch.object(Sender, 'sendmail', return_value=True):
+            mailbox_obj.send_this_mail(cursor, uid, [mailbox_id], context=context)
+        mailbox_data = mailbox_obj.read(cursor, uid, mailbox_id, ['folder', 'history', 'state'])
+        self.assertEqual(mailbox_data['folder'], 'error')
+        self.assertIn(': Traceback (most recent call last):', mailbox_data['history'])
+        self.assertEqual(mailbox_data['state'], 'na')
+
+    def test_crm_does_send_email_with_body(self):
+        cursor, uid, context = self.cursor,  self.uid, self.txn.context
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        case_obj = self.pool.get('crm.case')
+        imd_obj = self.pool.get('ir.model.data')
+        template_obj = self.pool.get('poweremail.templates')
+
+        template_id = imd_obj.get_object_reference(
+            cursor, uid, 'crm_poweremail',
+            'crm_poweremail_cannot_reopen_closed_case',
+        )[1]
+        template_obj.write(cursor, uid, template_id, {
+            'def_body_text': 'Test Body',
+        }, context=context)
+
+        ctx = context.copy()
+        ctx.update({'account_id': self.test_account_id})
+
+        case_id = case_obj.create(cursor, uid, {
+            'name': 'Test Case',
+            'email_from': 'test_email_from@email.com',
+            'section_id': self.test_section_id,
+            'state': 'done',
+        }, context=ctx)
+
+        mailbox_id = template_obj.generate_mail_sync(cursor, uid, template_id, case_id, context=ctx)
+        with patch.object(Sender, 'sendmail', return_value=True):
+            mailbox_obj.send_this_mail(cursor, uid, [mailbox_id], context=context)
+        mailbox_data = mailbox_obj.read(cursor, uid, mailbox_id, ['folder', 'history', 'state'])
+        self.assertEqual(mailbox_data['folder'], 'sent')
+        self.assertIn(': Email sent successfully', mailbox_data['history'])
+        self.assertEqual(mailbox_data['state'], 'na')
+
+    def _update_closed_case_from_mail(self, template_body):
+        """Process a customer reply received for an already closed case."""
+        cursor, uid, context = self.cursor, self.uid, self.txn.context
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        case_obj = self.pool.get('crm.case')
+        imd_obj = self.pool.get('ir.model.data')
+        template_obj = self.pool.get('poweremail.templates')
+
+        acc_id = imd_obj.get_object_reference(
+            cursor, uid, 'poweremail', 'info_energia_from_email'
+        )[1]
+        ctx = context.copy()
+        ctx.update({
+            'account_id': acc_id,
+        })
+
+        template_id = imd_obj.get_object_reference(
+            cursor, uid, 'crm_poweremail',
+            'crm_poweremail_cannot_reopen_closed_case',
+        )[1]
+        template_obj.write(cursor, uid, template_id, {
+            'def_body_text': template_body,
+        }, context=ctx)
+
+        case_id = case_obj.create(cursor, uid, {
+            'name': 'Test Case',
+            'email_from': 'customer@example.com',
+            'section_id': self.test_section_id,
+            'state': 'done',
+        }, context=ctx)
+        case = case_obj.browse(cursor, uid, case_id, context=ctx)
+
+        # This is the incoming email from the customer which tries to reply to
+        # the already closed case.
+        mail_source = (
+            'From: customer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: Re: Test Case\r\n'
+            '\r\n'
+            'Closed case reply\r\n'
+        )
+        # Mock only the automatic response: update_case_from_mail still stores
+        # the incoming customer email in the case history.
+        with patch.object(template_obj, 'generate_mail_sync') as generate:
+            # Already extracted data from the mail_source
+            mailbox_obj.create(cursor, uid, {
+                'pem_from': 'customer@example.com',
+                'pem_to': 'section@example.com',
+                'pem_subject': 'Re: Test Case',
+                'pem_body_text': 'Closed case reply',
+                'pem_mail_orig': mail_source,
+                'pem_account_id': self.test_account_id,
+                'conversation_id': case.conversation_id.id,
+                'folder': 'inbox',
+            }, context=ctx)
+
+        case = case_obj.browse(cursor, uid, case_id, context=ctx)
+        self.assertEqual(case.state, 'done')
+        self.assertEqual(
+            case.history_line[0].description, 'Closed case reply'
+        )
+        return generate
+
+    def test_closed_case_with_template_body_sends_response(self):
+        # A configured template generates the automatic "cannot reopen"
+        # response after the incoming email has been stored in history.
+        generate = self._update_closed_case_from_mail(
+            'Test Body'
+        )
+        call_count = generate.call_count
+        self.assertEqual(call_count, 1)
+
+    def test_closed_case_without_template_body_does_not_send_response(self):
+        # The incoming email is still stored, but an empty template disables
+        # the automatic response.
+        generate = self._update_closed_case_from_mail('')
+        call_count = generate.call_count
+        self.assertEqual(call_count, 0)
 
 
 class TestResPartner(testing.OOTestCase):

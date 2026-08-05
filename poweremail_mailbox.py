@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from osv import osv
 from tools.translate import _
 from tools import flatten
@@ -256,6 +257,8 @@ class PoweremailMailboxCRM(osv.osv):
         p_mail = self.browse(cursor, uid, p_mail_id, context=context)
         case_obj = self.pool.get('crm.case')
         section_obj = self.pool.get('crm.case.section')
+        template_obj = self.pool.get('poweremail.templates')
+        imd_obj = self.pool.get('ir.model.data')
 
         case = case_obj.read(
             cursor, uid, case_id, ['description', 'state']
@@ -281,10 +284,23 @@ class PoweremailMailboxCRM(osv.osv):
             _('Reply'), history=True, email=email.from_.address
         )
         # 2.5 - If pending or done set to open again
-        if case['state'] in ('pending', 'done'):
+        if case['state'] == 'pending':
             case_obj.case_reopen_and_notification(
                 cursor, uid, [case_id]
             )
+        if case['state'] == 'done':
+            template_id = imd_obj.get_object_reference(
+                cursor, uid, 'crm_poweremail',
+                'crm_poweremail_cannot_reopen_closed_case'
+            )[1]
+            body = template_obj.read(
+                cursor, uid, template_id, ['def_body_text'], context=context
+            )['def_body_text']
+            if body:
+                template_obj.generate_mail_sync(
+                    cursor, uid, template_id, case['id'], context=context
+                )
+
         # 3.- Emails from CC, TO and FROM
         case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
         reply_to = section_obj.read(

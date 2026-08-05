@@ -1,4 +1,6 @@
 # coding=utf-8
+from __future__ import absolute_import
+from .test_poweremail_mailbox import *
 from destral import testing
 from destral.transaction import Transaction
 from qreu import Email
