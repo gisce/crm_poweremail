@@ -68,6 +68,9 @@
 			<field name="inherit_id" ref="crm.crm_case_rule-view"/>
             <field name="type">form</field>
             <field name="arch" type="xml">
+                <xpath expr="//separator[@string='Automatic Triggers']" position="after">
+                    <field name="trg_email" colspan="2" widget="switch"/>
+                </xpath>
 				<page string="E-Mail Actions" position="replace">
 				</page>
 				<field name="act_email_cc" position="after">

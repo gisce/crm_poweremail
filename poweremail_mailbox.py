@@ -280,11 +280,11 @@ class PoweremailMailboxCRM(osv.osv):
             cursor, uid, case_obj.browse(cursor, uid, [case_id]),
             _('Reply'), history=True, email=email.from_.address
         )
-        # 2.5 - If pending or done set to open again
-        if case['state'] in ('pending', 'done'):
-            case_obj.case_reopen_and_notification(
-                cursor, uid, [case_id]
-            )
+
+        ctx = context.copy()
+        ctx.update({'email': email})
+        case_obj._action(cursor, uid, [(case.id, case.state)], False, context=ctx)
+
         # 3.- Emails from CC, TO and FROM
         case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
         reply_to = section_obj.read(
