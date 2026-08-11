@@ -713,9 +713,25 @@ class CrmCaseRule(osv.osv):
         if not value:
             return False
         value_template = Template(value, input_encoding='utf-8')
+        env = context.copy()
+        env.update({
+            'user': self.pool.get('res.users').simple_browse(cr, uid, uid, context=ctx),
+            'db': cr.dbname
+        })
+        values = {
+            'pool': case.pool,
+            'cursor': cr,
+            'uid': uid,
+            'peobject': case,
+            'env': env,
+            'format_exceptions': True,
+            'template': template,
+            'lang': ctx['lang']
+        }
         return value_template.render(
             object=case,
             date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            **values
         )
 
     def _get_email_subject(
