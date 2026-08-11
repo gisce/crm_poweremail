@@ -16,6 +16,10 @@
         "crm",
         "poweremail",
     ],
+    "test_depends": [
+        "giscedata_atc_distri",
+        "poweremail_references",
+    ],
     "init_xml": [],
     "demo_xml": [
         "demo/crm_demo.xml",
