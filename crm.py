@@ -7,8 +7,8 @@ from mako.template import Template
 
 from markdown import markdown
 from osv import osv, fields
+from poweremail.poweremail_core import get_email_default_lang
 from tools.translate import _
-from tools import config
 from qreu import address as qaddress
 from qreu.address import getaddresses
 
@@ -692,9 +692,8 @@ class CrmCaseRule(osv.osv):
             elif ctx.get('lang', False):
                 lang = ctx.get('lang')
             else:
-                lang = config.get('language', False) or False
-        if lang:
-            ctx['lang'] = lang
+                lang = get_email_default_lang()
+        ctx['lang'] = lang
         return ctx
 
     def _render_template_value(
