@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import base64
+
 from destral.patch import PatchNewCursors
 from destral.testing import OOTestCaseWithCursor
 from oorq.oorq import AsyncMode
@@ -86,7 +88,8 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
         return atc_id, crm_id
 
     def _create_template_and_rule(
-            self, model_name, subject, state_from):
+            self, model_name, subject, state_from,
+            body='Body for ${object.name}'):
         model_ids = self.pool.get('ir.model').search(
             self.cursor, self.uid, [('model', '=', model_name)], limit=1,
             context=self.context
@@ -98,7 +101,7 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
                 'object_name': model_ids[0],
                 'def_to': 'recipient@example.com',
                 'def_subject': subject,
-                'def_body_text': 'Body for ${object.name}',
+                'def_body_text': body,
                 'pem_account_id': self.account_id,
             }, context=self.context
         )
@@ -115,7 +118,7 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
 
     def _assert_rule_email(
             self, record_id, crm_id, transition, model_name, subject,
-            template_id):
+            template_id, attachment_id=False):
         previous_log_ids = set(self.log_obj.search(
             self.cursor, self.uid, [('name', '=', 'Rule')],
             context=self.context
@@ -135,7 +138,7 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
         mailbox = self.mailbox_obj.read(
             self.cursor, self.uid, mailbox_ids[0], [
                 'pem_subject', 'pem_body_text', 'pem_message_id',
-                'reference', 'template_id',
+                'pem_attachments_ids', 'reference', 'template_id',
             ], context=self.context
         )
         self.assertEqual(mailbox['pem_subject'], subject)
@@ -145,6 +148,8 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
         )
         self.assertIn('Body for', mailbox['pem_body_text'])
         self.assertIn('tinycrm-{}'.format(crm_id), mailbox['pem_message_id'])
+        if attachment_id:
+            self.assertIn(attachment_id, mailbox['pem_attachments_ids'])
 
         current_log_ids = set(self.log_obj.search(
             self.cursor, self.uid, [('name', '=', 'Rule')],
@@ -162,12 +167,25 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
         atc_id, crm_id = self._create_atc_with_distinct_crm_id()
         subject = 'ATC {} - ${{object.name}}'.format(atc_id)
         expected_subject = 'ATC {} - ATC PowerEmail rule case'.format(atc_id)
+        attachment_id = self.pool.get('ir.attachment').create(
+            self.cursor, self.uid, {
+                'name': 'ATC rule attachment',
+                'datas_fname': 'atc-rule.txt',
+                'datas': base64.b64encode(b'ATC rule attachment'),
+                'res_model': 'giscedata.atc',
+                'res_id': atc_id,
+            }, context=self.context
+        )
+        body = 'Body for ${{object.name}}\n\n![proof](attachment://{})'.format(
+            attachment_id
+        )
         template_id = self._create_template_and_rule(
-            'giscedata.atc', subject, 'done'
+            'giscedata.atc', subject, 'done', body=body
         )
         self._assert_rule_email(
             atc_id, crm_id, self.atc_obj.atc_close,
-            'giscedata.atc', expected_subject, template_id
+            'giscedata.atc', expected_subject, template_id,
+            attachment_id=attachment_id
         )
 
     def test_crm_rule_email_keeps_crm_compatibility(self):
