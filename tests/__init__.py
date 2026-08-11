@@ -1,4 +1,8 @@
 # coding=utf-8
+from __future__ import absolute_import
+
+from .test_atc_crm_rule_email import *
+
 from destral import testing
 from destral.transaction import Transaction
 from qreu import Email
