@@ -20,6 +20,7 @@ MARKDOWN_EXTENSIONS = [
     'markdown.extensions.sane_lists',
 ]
 MARKDOWN_TAB_LENGTH = 2
+RULE_TEMPLATE_CONTEXT_KEY = 'crm_rule_poweremail_template_id'
 
 
 class CrmCase(osv.osv):
@@ -378,9 +379,10 @@ class CrmCase(osv.osv):
             return []
 
         attachment_obj = self.pool.get('ir.attachment')
+        case_model = case._table._name
         allowed_ids = attachment_obj.search(cursor, uid, [
             ('id', 'in', attachment_ids),
-            ('res_model', '=', self._name),
+            ('res_model', '=', case_model),
             ('res_id', '=', case.id),
         ], context=context)
         allowed_ids = set(allowed_ids)
@@ -406,7 +408,13 @@ class CrmCase(osv.osv):
             context = {}
         pm_account_obj = self.pool.get('poweremail.core_accounts')
         pm_mailbox_obj = self.pool.get('poweremail.mailbox')
+        rule_obj = self.pool.get('crm.case.rule')
         attachment_obj = self.pool.get('ir.attachment')
+        crm_case = self._get_rule_history_case(
+            cursor, uid, case, context=context
+        )
+        case_model = case._table._name
+        template_id = context.get(RULE_TEMPLATE_CONTEXT_KEY, False)
         if (case.user_id and case.user_id.address_id
                 and case.user_id.address_id.email):
             emailfrom = case.user_id.address_id.email
@@ -426,7 +434,9 @@ class CrmCase(osv.osv):
                     _("Missing Poweremail-Account with Reply-To"
                       " of the Case Section."))
 
-        email_bcc = case.get_bcc_emails(context=context)
+        email_bcc = self.get_bcc_emails(
+            cursor, uid, crm_case.id, context=context
+        )
         emails = self.filter_mails(emails, emailfrom, case)
         email_cc = self.format_mails(cursor, uid, case)
         email_bcc = self.filter_mails(
@@ -438,20 +448,31 @@ class CrmCase(osv.osv):
         if signature:
             email_html_body = '{}\n-- \n{}'.format(email_html_body, signature)
 
+        subject = False
+        if template_id:
+            subject = rule_obj._get_email_subject(
+                cursor, uid, template_id, case, context=context
+            )
+        if not subject:
+            subject = self.get_subject_mail_from_case(
+                cursor, uid, case, context=context
+            )
+
         pm_mail_id = pm_mailbox_obj.create(cursor, uid, {
             'pem_from': emailfrom,
             'pem_to': ', '.join(set(emails)),
-            'pem_subject': '[%d] %s' % (case.id, case.name.encode('utf8')),
+            'pem_subject': subject,
             'pem_body_text': body,
             'pem_body_html': email_html_body,
             'pem_account_id': pem_account_id[0],
             'folder': 'outbox',
             'date_mail': datetime.now().strftime('%Y-%m-%d'),
-            'pem_message_id': make_msgid('tinycrm-%s' % case.id),
-            'conversation_id': case.conversation_id.id,
+            'pem_message_id': make_msgid('tinycrm-%s' % crm_case.id),
+            'conversation_id': crm_case.conversation_id.id,
             'pem_cc': ', '.join(set(email_cc)),
             'pem_bcc': ', '.join(set(email_bcc)),
-            'reference': 'crm.case,{}'.format(case.id),
+            'reference': '{},{}'.format(case_model, case.id),
+            'template_id': template_id,
         })
 
         attachment_ids = list(context.get('attachment_ids', []))
@@ -587,6 +608,23 @@ class CrmCaseRule(osv.osv):
         'pm_template_id': fields.many2one(
             'poweremail.templates', 'Poweremail Template', ondelete='restrict')
     }
+
+    def execute(self, cursor, uid, ids, case, context=None):
+        if context is None:
+            context = {}
+        if isinstance(ids, list) and len(ids) == 1:
+            rule_id = ids[0]
+        else:
+            raise ValueError("Multiple ids is not supported")
+        template_id = self.read(
+            cursor, uid, rule_id, ['pm_template_id'], context=context
+        )['pm_template_id']
+        rule_context = context.copy()
+        if template_id:
+            rule_context[RULE_TEMPLATE_CONTEXT_KEY] = template_id[0]
+        return super(CrmCaseRule, self).execute(
+            cursor, uid, ids, case, context=rule_context
+        )
     
     def get_email_addresses(self, cr, uid, rule_id, case, context):
         """
@@ -637,63 +675,75 @@ class CrmCaseRule(osv.osv):
 
         return list(set(emails))
 
+    def _get_template_context(
+            self, cr, uid, template, case, context=None):
+        if context is None:
+            context = {}
+        pm_send_wizard_obj = self.pool.get('poweremail.send.wizard')
+        ctx = context.copy()
+        lang = pm_send_wizard_obj.get_value(
+            cr, uid, template, template.lang, context, id=case.id
+        )
+        if not lang:
+            if case.partner_id and case.partner_id.lang:
+                lang = case.partner_id.lang
+            elif case.user_id and case.user_id.context_lang:
+                lang = case.user_id.context_lang
+            elif ctx.get('lang', False):
+                lang = ctx.get('lang')
+            else:
+                lang = config.get('language', False) or False
+        if lang:
+            ctx['lang'] = lang
+        return ctx
+
+    def _render_template_value(
+            self, cr, uid, template_id, field_name, case, fallback=False,
+            context=None):
+        pm_template_obj = self.pool.get('poweremail.templates')
+        template = pm_template_obj.browse(
+            cr, uid, template_id, context=context
+        )
+        ctx = self._get_template_context(
+            cr, uid, template, case, context=context
+        )
+        value = pm_template_obj.read(
+            cr, uid, template_id, [field_name], context=ctx
+        )[field_name] or fallback
+        if not value:
+            return False
+        value_template = Template(value, input_encoding='utf-8')
+        return value_template.render(
+            object=case,
+            date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        )
+
+    def _get_email_subject(
+            self, cr, uid, template_id, case, context=None):
+        return self._render_template_value(
+            cr, uid, template_id, 'def_subject', case, context=context
+        )
+
     def get_email_body(self, cr, uid, rule_id, case, context=None):
-        """
-        Override CRM.Case get_email_body
-        Gets the body from the template on the rule and renders it with the
-        case values, updating the context language with the case language
-        :param cr:      OpenERP Cursor
-        :param uid:     OpenERP User ID
-        :param rule_id: OpenERP action (Crm.Case.Rule) ID
-        :param case:    OpenERP case (Crm.Case) browse record
-        :param context: OpenERP Context
-        :return:        The rendered body for the template referenced on the rule
-        """
-        if not context:
+        """Render the rule template body with the functional record."""
+        if context is None:
             context = {}
         if isinstance(rule_id, list):
             rule_id = rule_id[0]
         if isinstance(case, list):
             case = case[0]
         action_body = super(CrmCaseRule, self).get_email_body(
-            cr, uid, rule_id, case, context)
-        action_template = self.read(
-            cr, uid, rule_id, ['pm_template_id'])['pm_template_id']
-        if not action_template:
-            return action_body
-        else:
-            action_template = action_template[0]
-        pm_template_obj = self.pool.get('poweremail.templates')
-        pm_template = pm_template_obj.browse(cr, uid, action_template)
-        pm_send_wizard_obj = self.pool.get('poweremail.send.wizard')
-        ctx = context.copy()
-        # Get lang from template
-        lang = pm_send_wizard_obj.get_value(
-            cr, uid, pm_template, pm_template.lang, context, id=case.id)
-        if not lang:
-            # Get lang from case.partner_id (source)
-            if case.partner_id and case.partner_id.lang:
-                lang = case.partner_id.lang
-            # Get lang from case.user_id (responsible)
-            elif case.user_id and case.user_id.context_lang:
-                lang = case.user_id.context_lang
-            # Get lang from Context (Server-based)
-            elif ctx.get('lang', False):
-                lang = ctx.get('lang')
-            # Get lang from config file
-            else:
-                lang = config.get('language', False) or False
-        if lang:
-            ctx['lang'] = lang
-        template_body = pm_template_obj.read(
-            cr, uid, action_template, ['def_body_text'], ctx)['def_body_text']
-        body = template_body or action_body
-        body_mako_tpl = Template(body, input_encoding='utf-8')
-        rendered_body = body_mako_tpl.render(
-            object=case,
-            date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            cr, uid, rule_id, case, context
         )
-        return rendered_body
+        template_id = self.read(
+            cr, uid, rule_id, ['pm_template_id'], context=context
+        )['pm_template_id']
+        if not template_id:
+            return action_body
+        return self._render_template_value(
+            cr, uid, template_id[0], 'def_body_text', case,
+            fallback=action_body, context=context
+        )
 
 
 CrmCaseRule()
