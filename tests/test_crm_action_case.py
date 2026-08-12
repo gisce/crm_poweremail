@@ -3,11 +3,6 @@ from __future__ import absolute_import
 from destral import testing
 from destral.patch import PatchNewCursors
 from signals import DB_CURSOR_COMMIT
-import six
-if six.PY2:
-    from mock import patch
-else:
-    from unittest.mock import patch
 
 
 class TestCrmActionCase(testing.OOTestCaseWithCursor):
