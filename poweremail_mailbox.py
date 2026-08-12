@@ -283,7 +283,7 @@ class PoweremailMailboxCRM(osv.osv):
 
         ctx = context.copy()
         ctx.update({'email': email})
-        case_obj._action(cursor, uid, [(case.id, case.state)], False, context=ctx)
+        case_obj._action(cursor, uid, [(case['id'], case['state'])], False, context=ctx)
 
         # 3.- Emails from CC, TO and FROM
         case_data = case_obj.read(cursor, uid, case_id, ['section_id'])
