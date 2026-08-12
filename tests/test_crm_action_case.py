@@ -56,28 +56,13 @@ class TestCrmActionCase(testing.OOTestCaseWithCursor):
         mail_source = ('S:')
         DB_CURSOR_COMMIT.send(cursor)
 
-        # mock to avoid bug where context is not passed to the _action method
-        original_bound_method = case_obj._action
-        unbound_wrapper = getattr(original_bound_method, 'im_func',original_bound_method)
-        raw_action = unbound_wrapper
-        if getattr(unbound_wrapper, 'func_closure', None):
-            for cell in unbound_wrapper.func_closure:
-                contents = cell.cell_contents
-                if hasattr(contents, '__name__') and contents.__name__ == '_action':
-                    raw_action = contents
-                    break
-
-        def mock_action(cr, user_id, cases, state_to, scrit=None, context=None):
-            return raw_action(case_obj, cr, user_id, cases, state_to, scrit, context=context)
-
-        with patch.object(case_obj, '_action', autospec=True, side_effect=mock_action):
-            mailbox_obj.create(cursor, uid, {
-                'pem_body_text': 'Closed case reply',
-                'pem_mail_orig': mail_source,
-                'pem_account_id': acc_id,
-                'conversation_id': case.conversation_id.id,
-            }, context=ctx)
-            DB_CURSOR_COMMIT.send(cursor)
+        mailbox_obj.create(cursor, uid, {
+            'pem_body_text': 'Closed case reply',
+            'pem_mail_orig': mail_source,
+            'pem_account_id': acc_id,
+            'conversation_id': case.conversation_id.id,
+        }, context=ctx)
+        DB_CURSOR_COMMIT.send(cursor)
 
         case = case_obj.simple_browse(cursor, uid, case_id, context=ctx)
         self.assertEqual(case.state, 'open')
