@@ -8,13 +8,14 @@ from destral.testing import OOTestCaseWithCursor
 from oorq.oorq import AsyncMode
 
 
-class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
+class TestInheritsCrmRuleEmail(OOTestCaseWithCursor):
 
     def setUp(self):
-        super(TestAtcCrmRuleEmail, self).setUp()
+        super(TestInheritsCrmRuleEmail, self).setUp()
         self.context = self.txn.context
         self.pool = self.openerp.pool
-        self.atc_obj = self.pool.get('giscedata.atc')
+        self.inherits_obj = self.pool.get('giscedata.crm.inherits.test')
+        self.inherits_obj._auto_init(self.cursor, {'module': 'crm_poweremail'})
         self.crm_obj = self.pool.get('crm.case')
         self.rule_obj = self.pool.get('crm.case.rule')
         self.template_obj = self.pool.get('poweremail.templates')
@@ -41,15 +42,15 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
         section_obj = self.pool.get('crm.case.section')
         self.section_id = section_obj.create(
             self.cursor, self.uid, {
-                'name': 'ATC PowerEmail rules test',
-                'reply_to': 'atc-rules@example.com',
+                'name': 'INHERITS CRM PowerEmail rules test',
+                'reply_to': 'inherits-crm-rules@example.com',
             }, context=self.context
         )
         account_obj = self.pool.get('poweremail.core_accounts')
         self.account_id = account_obj.create(
             self.cursor, self.uid, {
-                'name': 'ATC PowerEmail rules test',
-                'email_id': 'atc-rules@example.com',
+                'name': 'INHERITS CRM PowerEmail rules test',
+                'email_id': 'inherits-crm-rules@example.com',
                 'user': self.uid,
                 'company': 'yes',
                 'smtpserver': 'localhost',
@@ -57,19 +58,19 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
             }, context=self.context
         )
 
-    def _create_atc_with_distinct_crm_id(self):
+    def _create_inherits_crm_with_distinct_crm_id(self):
         values = {
-            'name': 'ATC PowerEmail rule case',
+            'name': 'INHERITS CRM PowerEmail rule case',
             'section_id': self.section_id,
             'state': 'draft',
         }
-        atc_id = self.atc_obj.create(
+        inherits_crm_id = self.inherits_obj.create(
             self.cursor, self.uid, values, context=self.context
         )
-        crm_id = self.atc_obj.read(
-            self.cursor, self.uid, atc_id, ['crm_id'], context=self.context
+        crm_id = self.inherits_obj.read(
+            self.cursor, self.uid, inherits_crm_id, ['crm_id'], context=self.context
         )['crm_id'][0]
-        if atc_id == crm_id:
+        if inherits_crm_id == crm_id:
             self.crm_obj.create(
                 self.cursor, self.uid, {
                     'name': 'CRM sequence offset',
@@ -77,15 +78,15 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
                     'state': 'draft',
                 }, context=self.context
             )
-            atc_id = self.atc_obj.create(
+            inherits_crm_id = self.inherits_obj.create(
                 self.cursor, self.uid, values, context=self.context
             )
-            crm_id = self.atc_obj.read(
-                self.cursor, self.uid, atc_id, ['crm_id'],
+            crm_id = self.inherits_obj.read(
+                self.cursor, self.uid, inherits_crm_id, ['crm_id'],
                 context=self.context
             )['crm_id'][0]
-        self.assertNotEqual(atc_id, crm_id)
-        return atc_id, crm_id
+        self.assertNotEqual(inherits_crm_id, crm_id)
+        return inherits_crm_id, crm_id
 
     def _create_template_and_rule(
             self, model_name, subject, state_from,
@@ -163,28 +164,28 @@ class TestAtcCrmRuleEmail(OOTestCaseWithCursor):
         )
         self.assertEqual(rule_log['case_id'][0], crm_id)
 
-    def test_atc_rule_email_uses_template_and_functional_reference(self):
-        atc_id, crm_id = self._create_atc_with_distinct_crm_id()
-        subject = 'ATC {} - ${{object.name}}'.format(atc_id)
-        expected_subject = 'ATC {} - ATC PowerEmail rule case'.format(atc_id)
+    def test_inherits_crm_rule_email_uses_template_and_functional_reference(self):
+        inherits_crm_id, crm_id = self._create_inherits_crm_with_distinct_crm_id()
+        subject = 'INHERITS CRM {} - ${{object.name}}'.format(inherits_crm_id)
+        expected_subject = 'INHERITS CRM {} - INHERITS CRM PowerEmail rule case'.format(inherits_crm_id)
         attachment_id = self.pool.get('ir.attachment').create(
             self.cursor, self.uid, {
-                'name': 'ATC rule attachment',
-                'datas_fname': 'atc-rule.txt',
-                'datas': base64.b64encode(b'ATC rule attachment'),
-                'res_model': 'giscedata.atc',
-                'res_id': atc_id,
+                'name': 'INHERITS CRM rule attachment',
+                'datas_fname': 'inherits-crm-rule.txt',
+                'datas': base64.b64encode(b'INHERITS CRM rule attachment'),
+                'res_model': 'giscedata.crm.inherits.test',
+                'res_id': inherits_crm_id,
             }, context=self.context
         )
         body = 'Body for ${{object.name}}\n\n![proof](attachment://{})'.format(
             attachment_id
         )
         template_id = self._create_template_and_rule(
-            'giscedata.atc', subject, 'done', body=body
+            'giscedata.crm.inherits.test', subject, 'done', body=body
         )
         self._assert_rule_email(
-            atc_id, crm_id, self.atc_obj.atc_close,
-            'giscedata.atc', expected_subject, template_id,
+            inherits_crm_id, crm_id, self.inherits_obj.atc_close,
+            'giscedata.crm.inherits.test', expected_subject, template_id,
             attachment_id=attachment_id
         )
 

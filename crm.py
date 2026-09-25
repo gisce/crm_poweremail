@@ -379,7 +379,7 @@ class CrmCase(osv.osv):
             return []
 
         attachment_obj = self.pool.get('ir.attachment')
-        case_model = case._table._name
+        case_model = case._name
         allowed_ids = attachment_obj.search(cursor, uid, [
             ('id', 'in', attachment_ids),
             ('res_model', '=', case_model),
@@ -413,7 +413,7 @@ class CrmCase(osv.osv):
         crm_case = self._get_rule_history_case(
             cursor, uid, case, context=context
         )
-        case_model = case._table._name
+        case_model = case._name
         template_id = context.get(RULE_TEMPLATE_CONTEXT_KEY, False)
         if (case.user_id and case.user_id.address_id
                 and case.user_id.address_id.email):
