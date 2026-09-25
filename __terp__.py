@@ -16,6 +16,9 @@
         "crm",
         "poweremail",
     ],
+    "test_depends": [
+        "poweremail_references",
+    ],
     "init_xml": [],
     "demo_xml": [
         "demo/crm_demo.xml",
