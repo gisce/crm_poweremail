@@ -184,7 +184,7 @@ class TestInheritsCrmRuleEmail(OOTestCaseWithCursor):
             'giscedata.crm.inherits.test', subject, 'done', body=body
         )
         self._assert_rule_email(
-            inherits_crm_id, crm_id, self.inherits_obj.atc_close,
+            inherits_crm_id, crm_id, self.inherits_obj.apply_crm_rules,
             'giscedata.crm.inherits.test', expected_subject, template_id,
             attachment_id=attachment_id
         )
