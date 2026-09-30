@@ -14,7 +14,7 @@ class TestInheritsCrmRuleEmail(OOTestCaseWithCursor):
         super(TestInheritsCrmRuleEmail, self).setUp()
         self.context = self.txn.context
         self.pool = self.openerp.pool
-        self.inherits_obj = self.pool.get('giscedata.crm.inherits.test')
+        self.inherits_obj = self.pool.get('crm.inherits.test')
         self.inherits_obj._auto_init(self.cursor, {'module': 'crm_poweremail'})
         self.crm_obj = self.pool.get('crm.case')
         self.rule_obj = self.pool.get('crm.case.rule')
@@ -173,7 +173,7 @@ class TestInheritsCrmRuleEmail(OOTestCaseWithCursor):
                 'name': 'INHERITS CRM rule attachment',
                 'datas_fname': 'inherits-crm-rule.txt',
                 'datas': base64.b64encode(b'INHERITS CRM rule attachment'),
-                'res_model': 'giscedata.crm.inherits.test',
+                'res_model': 'crm.inherits.test',
                 'res_id': inherits_crm_id,
             }, context=self.context
         )
@@ -181,11 +181,11 @@ class TestInheritsCrmRuleEmail(OOTestCaseWithCursor):
             attachment_id
         )
         template_id = self._create_template_and_rule(
-            'giscedata.crm.inherits.test', subject, 'done', body=body
+            'crm.inherits.test', subject, 'done', body=body
         )
         self._assert_rule_email(
             inherits_crm_id, crm_id, self.inherits_obj.apply_crm_rules,
-            'giscedata.crm.inherits.test', expected_subject, template_id,
+            'crm.inherits.test', expected_subject, template_id,
             attachment_id=attachment_id
         )
 

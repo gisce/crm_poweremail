@@ -3,9 +3,9 @@ from __future__ import absolute_import
 from osv import osv, fields
 
 
-class GiscedataCrmInheritsTest(osv.OsvInherits):
+class CrmInheritsTest(osv.OsvInherits):
 
-    _name = "giscedata.crm.inherits.test"
+    _name = "crm.inherits.test"
     _test_class = True
     _inherits = {"crm.case": "crm_id"}
     _order = 'id desc'
@@ -25,4 +25,4 @@ class GiscedataCrmInheritsTest(osv.OsvInherits):
         )
 
 
-GiscedataCrmInheritsTest()
+CrmInheritsTest()
