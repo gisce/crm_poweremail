@@ -521,6 +521,8 @@ class CrmCase(osv.osv):
                 'som': False,
                 'canal_id': False,
             })
+            if context.get('ignore_mail'):
+                continue
             emails = [case.email_from]
             if case.email_cc:
                 context['email_cc'] = list(set(
