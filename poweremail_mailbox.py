@@ -4,6 +4,8 @@ from tools.translate import _
 from tools import flatten
 from talon import quotations
 from datetime import datetime
+from email import message_from_string
+from email.utils import mktime_tz, parsedate_tz
 from qreu.address import Address
 from html2text import html2text
 from lxml import html as lxml_html
@@ -36,6 +38,28 @@ def get_cases_ids_from_references(references):
     return list({
         int(x) for x in flatten([CASE_ID_RE.findall(ref) for ref in references])
     })
+
+
+def date_mail_from_message_localtime(cursor, raw_message):
+    message = message_from_string(raw_message)
+    date_header = message.get('date')
+    if not date_header:
+        return False
+    parsed_date = parsedate_tz(date_header)
+    if not parsed_date:
+        return False
+    timestamp = mktime_tz(parsed_date)
+    cursor.execute(
+        """
+        SELECT to_char(
+            to_timestamp(CAST(%s AS double precision))
+                AT TIME ZONE current_setting('TIMEZONE'),
+            'YYYY-MM-DD HH24:MI:SS'
+        )
+        """,
+        (timestamp,)
+    )
+    return cursor.fetchone()[0]
 
 
 def _normalize_attachment_ref(value):
@@ -396,6 +420,12 @@ class PoweremailMailboxCRM(osv.osv):
         """
         if context is None:
             context = {}
+        if vals.get('pem_mail_orig', False):
+            date_mail = date_mail_from_message_localtime(
+                cursor, vals['pem_mail_orig']
+            )
+            if date_mail:
+                vals['date_mail'] = date_mail
         res_id = super(PoweremailMailboxCRM, self).create(cursor, uid, vals,
                                                           context)
         p_mail = self.browse(cursor, uid, res_id, context=context)

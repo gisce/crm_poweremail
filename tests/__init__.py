@@ -23,6 +23,25 @@ class TestCRMPoweremail(testing.OOTestCase):
 
     def tearDown(self):
         self.txn.stop()
+
+    def test_date_mail_from_message_uses_postgresql_timezone(self):
+        from crm_poweremail.poweremail_mailbox import (
+            date_mail_from_message_localtime
+        )
+
+        self.cursor.execute("SET LOCAL TIME ZONE 'Europe/Madrid'")
+        raw_message = (
+            'From: customer@example.com\r\n'
+            'To: section@example.com\r\n'
+            'Subject: Date Localtime\r\n'
+            'Date: Thu, 8 Oct 2009 09:35:42 -0000\r\n'
+            '\r\n'
+            'Testing date localtime\r\n'
+        )
+        self.assertEqual(
+            date_mail_from_message_localtime(self.cursor, raw_message),
+            '2009-10-08 11:35:42'
+        )
     
     def _create_base_test_data(self):
         """Create base test data: partner, address, user address, section"""
@@ -928,6 +947,7 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
             raw_email = f.read()
         if not isinstance(raw_email, str):
             raw_email = raw_email.decode('iso-8859-1')
+        self.cursor.execute("SET LOCAL TIME ZONE 'Europe/Madrid'")
         email_id = self.create_email_case(raw_email)
 
         email = pem_obj.browse(self.cursor, self.uid, email_id)
@@ -935,6 +955,7 @@ class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):
             ('conversation_id', '=', email.conversation_id.id)
         ])
         self.assertEqual(len(case_ids), 1)
+        self.assertEqual(email.date_mail, '2025-07-16 13:14:11')
         case = case_obj.browse(self.cursor, self.uid, case_ids[0])
         self.assertEqual(case.name, email.pem_subject)
         self.assertEqual(case.email_from, email.pem_from)
