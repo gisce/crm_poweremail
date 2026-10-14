@@ -585,8 +585,19 @@ class CrmCaseRule(osv.osv):
 
     _columns = {
         'pm_template_id': fields.many2one(
-            'poweremail.templates', 'Poweremail Template', ondelete='restrict')
+            'poweremail.templates', 'Poweremail Template', ondelete='restrict'),
+        'trg_email': fields.boolean('Email Event', help='An email event executes the rules.'),
     }
+
+    def _match_triggered_by_email_event(self, cursor, uid, action, case, context=None):
+        if not action.trg_email:
+            return True
+
+        email = context.get('email')
+        if not email:
+            return False
+
+        return True
     
     def get_email_addresses(self, cr, uid, rule_id, case, context):
         """
