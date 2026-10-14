@@ -1,4 +1,9 @@
 # coding=utf-8
+from __future__ import absolute_import
+
+from . import test_classes
+from .test_inherits_model_crm_rule_email import *
+
 from destral import testing
 from destral.transaction import Transaction
 from qreu import Email
