@@ -103,7 +103,7 @@ jobs:
           . $SCRIPTS_PATH/load_pyenv.sh
           pyenv activate $BUILD_ID
           . $SCRIPTS_PATH/export_env_vars.sh $ROOT_DIR_SRC
-          . $SCRIPTS_PATH/run_tests_custom.sh $BUILD_ID $ROOT_DIR_SRC $ADDONS_PATH
+          . $SCRIPTS_PATH/run_tests_custom.sh $BUILD_ID $ROOT_DIR_SRC $ADDONS_PATH ${{ github.event.repository.name }}
 
       - name: Remove virtualenv
         if: success() || failure()
