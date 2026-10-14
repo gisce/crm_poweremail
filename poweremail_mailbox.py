@@ -336,11 +336,16 @@ class PoweremailMailboxCRM(osv.osv):
         case_obj = self.pool.get('crm.case')
         mailbox_obj = self.pool.get('poweremail.mailbox')
         email_from = case.section_id.reply_to
+        case_emails = case.get_cc_emails()
+        if (
+            case.user_id and case.user_id.address_id
+            and case.user_id.address_id.email
+        ):
+            case_emails.append(case.user_id.address_id.email)
+        if case.partner_address_id and case.partner_address_id.email:
+            case_emails.append(case.partner_address_id.email)
         email_to = case_obj.filter_mails(
-            (
-                case.get_cc_emails() +
-                [case.user_id.address_id.email, case.partner_address_id.email]
-            ),
+            case_emails,
             email.from_.address,
             case,
             todel_emails=email.recipients.addresses+[case.section_id.reply_to]
