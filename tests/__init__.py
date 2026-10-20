@@ -2,10 +2,10 @@
 from destral import testing
 from destral.transaction import Transaction
 from qreu import Email
+from qreu.address import Address
 from addons import get_module_resource
 from html2text import html2text
 
-import email
 import logging
 import re
 
@@ -438,19 +438,9 @@ class TestCRMPoweremail(testing.OOTestCase):
         self.assertEqual(other_attachment.res_id, other_case_id)
 
     def test_email_send_sends_markdown_images_inline(self):
-        """Test markdown image attachments are sent as inline MIME parts."""
+        """Test markdown images are passed to PowerEmail as inline payloads."""
         self.logger.info('Testing markdown images are sent inline')
         from mock import patch
-        from qreu.sendcontext import Sender
-
-        class CaptureSender(Sender):
-            def __init__(self):
-                super(CaptureSender, self).__init__()
-                self.mime_string = None
-
-            def sendmail(self, mail):
-                self.mime_string = mail.mime_string
-                return True
 
         case_obj = self.pool.get('crm.case')
         attachment_obj = self.pool.get('ir.attachment')
@@ -491,40 +481,23 @@ class TestCRMPoweremail(testing.OOTestCase):
             ('folder', '=', 'outbox')
         ])
         mailbox = mailbox_obj.browse(self.cursor, self.uid, mailbox_ids[0])
-        sender = CaptureSender()
 
-        with patch.object(account_obj, 'get_sender', return_value=sender):
+        with patch.object(account_obj, 'send_mail', return_value=True) as send:
             mailbox_obj.send_this_mail(self.cursor, self.uid, [mailbox.id])
 
-        message = email.message_from_string(sender.mime_string)
-        self.assertEqual(message.get_content_type(), 'multipart/related')
-        html_parts = [
-            part.get_payload(decode=True).decode(
-                part.get_content_charset() or 'utf-8'
-            )
-            for part in message.walk()
-            if part.get_content_type() == 'text/html'
-        ]
-        inline_parts = [
-            part for part in message.walk()
-            if part.get('Content-ID') ==
-            '<poweremail-attachment-{0}@local>'.format(attachment_id)
-        ]
-
-        self.assertEqual(len(html_parts), 1)
+        body = send.call_args[0][5]
+        payload = send.call_args[1]['payload']
+        content_id = 'poweremail-attachment-{0}@local'.format(attachment_id)
         self.assertIn(
-            'src="cid:poweremail-attachment-{0}@local"'.format(
-                attachment_id
-            ),
-            html_parts[0]
+            'src="cid:{0}"'.format(content_id), body['html']
         )
-        self.assertFalse(re.search(r'attachment://{0}'.format(attachment_id),
-                                   html_parts[0]))
-        self.assertEqual(len(inline_parts), 1)
+        self.assertFalse(
+            re.search(r'attachment://{0}'.format(attachment_id), body['html'])
+        )
         self.assertEqual(
-            inline_parts[0].get('Content-Disposition'),
-            'inline; filename="logo.png"'
+            payload['logo.png']['disposition'], 'inline'
         )
+        self.assertEqual(payload['logo.png']['content_id'], content_id)
 
     def test_incoming_html_inline_images_are_markdown_attachments(self):
         """Test incoming HTML images reference saved attachments in markdown."""
@@ -855,6 +828,163 @@ class TestCRMPoweremail(testing.OOTestCase):
 
         p_mail = mailbox_obj.browse(self.cursor, self.uid, pmail_id)
         self.assertEqual(p_mail.pem_body_text, 'fallback text')
+
+
+class TestForwardCaseResponse(testing.OOTestCaseWithCursor):
+    def setUp(self):
+        super(TestForwardCaseResponse, self).setUp()
+        address_obj = self.pool.get('res.partner.address')
+        self.user_address_id = address_obj.create(self.cursor, self.uid, {
+            'name': 'Responsible',
+            'email': 'responsible@example.com',
+        })
+        self.pool.get('res.users').write(self.cursor, self.uid, [self.uid], {
+            'address_id': self.user_address_id,
+        })
+        self.partner_address_id = address_obj.create(self.cursor, self.uid, {
+            'name': 'Partner Contact',
+            'email': 'partner@example.com',
+        })
+        section_id = self.pool.get('crm.case.section').create(
+            self.cursor, self.uid, {
+                'name': 'Reply Test Section',
+                'reply_to': 'section@example.com',
+            }
+        )
+        self.account_id = self.pool.get('poweremail.core_accounts').create(
+            self.cursor, self.uid, {
+                'name': 'Reply Test Account',
+                'email_id': 'section@example.com',
+                'user': self.uid,
+                'smtpserver': 'smtp.example.com',
+                'smtpport': 587,
+                'company': 'no',
+            }
+        )
+        self.case_id = self.pool.get('crm.case').create(
+            self.cursor, self.uid, {
+                'name': 'Reply Test Case',
+                'section_id': section_id,
+                'user_id': self.uid,
+                'partner_address_id': self.partner_address_id,
+                'email_from': 'customer@example.com',
+                'email_cc': 'watcher@example.com, already@example.com',
+                'email_bcc': 'hidden@example.com',
+                'description': 'Initial description',
+                'state': 'draft',
+            }
+        )
+
+    def _assert_reply_recipients(self, expected_recipients):
+        mailbox_obj = self.pool.get('poweremail.mailbox')
+        case_obj = self.pool.get('crm.case')
+        case = case_obj.browse(self.cursor, self.uid, self.case_id)
+        message_id = '<reply-with-optional-recipients@example.com>'
+        mail_id = mailbox_obj.create(self.cursor, self.uid, {
+            'pem_from': 'customer@example.com',
+            'pem_to': 'section@example.com, already@example.com',
+            'pem_subject': 'Reply Test Case',
+            'pem_body_text': 'Reply body',
+            'pem_account_id': self.account_id,
+            'conversation_id': case.conversation_id.id,
+            'pem_message_id': message_id,
+            'folder': 'inbox',
+            'pem_mail_orig': (
+                'From: customer@example.com\r\n'
+                'To: section@example.com, already@example.com\r\n'
+                'Subject: Re: Reply Test Case\r\n'
+                'Message-ID: {0}\r\n'
+                '\r\n'
+                'Reply body\r\n'
+            ).format(message_id),
+        })
+        self.assertTrue(mail_id)
+        case = case_obj.browse(self.cursor, self.uid, self.case_id)
+        self.assertTrue(self.pool.get('crm.case.history').search(
+            self.cursor, self.uid, [
+                ('case_id', '=', self.case_id),
+                ('description', '=', 'Reply body'),
+            ]
+        ))
+        notification_ids = mailbox_obj.search(self.cursor, self.uid, [
+            ('conversation_id', '=', case.conversation_id.id),
+            ('pem_message_id', '=', message_id),
+            ('folder', '=', 'outbox'),
+        ])
+        recipients = []
+        for notification in mailbox_obj.browse(
+                self.cursor, self.uid, notification_ids):
+            for value in (notification.pem_to, notification.pem_cc):
+                recipients.extend([
+                    Address.parse(addr.strip()).address
+                    for addr in (value or '').split(',') if addr.strip()
+                ])
+        self.assertEqual(set(recipients), set(expected_recipients))
+        self.assertEqual(len(recipients), len(expected_recipients))
+
+    def test_reply_without_responsible(self):
+        case_obj = self.pool.get('crm.case')
+        case_obj.write(self.cursor, self.uid, [self.case_id], {
+            'user_id': False,
+        })
+        self._assert_reply_recipients([
+            'watcher@example.com', 'partner@example.com', 'hidden@example.com',
+        ])
+        self.assertFalse(
+            case_obj.browse(self.cursor, self.uid, self.case_id).user_id
+        )
+
+    def test_reply_without_responsible_address(self):
+        self.pool.get('res.users').write(self.cursor, self.uid, [self.uid], {
+            'address_id': False,
+        })
+        self._assert_reply_recipients([
+            'watcher@example.com', 'partner@example.com', 'hidden@example.com',
+        ])
+
+    def test_reply_without_responsible_email(self):
+        self.pool.get('res.partner.address').write(
+            self.cursor, self.uid, [self.user_address_id], {'email': False}
+        )
+        self._assert_reply_recipients([
+            'watcher@example.com', 'partner@example.com', 'hidden@example.com',
+        ])
+
+    def test_reply_without_partner_contact(self):
+        self.pool.get('crm.case').write(
+            self.cursor, self.uid, [self.case_id],
+            {'partner_address_id': False}
+        )
+        self._assert_reply_recipients([
+            'watcher@example.com', 'responsible@example.com',
+            'hidden@example.com',
+        ])
+
+    def test_reply_without_partner_email(self):
+        self.pool.get('res.partner.address').write(
+            self.cursor, self.uid, [self.partner_address_id], {'email': False}
+        )
+        self._assert_reply_recipients([
+            'watcher@example.com', 'responsible@example.com',
+            'hidden@example.com',
+        ])
+
+    def test_reply_with_all_recipients(self):
+        self._assert_reply_recipients([
+            'watcher@example.com', 'responsible@example.com',
+            'partner@example.com', 'hidden@example.com',
+        ])
+
+    def test_reply_without_forward_recipients(self):
+        self.pool.get('crm.case').write(
+            self.cursor, self.uid, [self.case_id], {
+                'user_id': False,
+                'partner_address_id': False,
+                'email_cc': '',
+                'email_bcc': '',
+            }
+        )
+        self._assert_reply_recipients([])
 
 
 class TestCrmPoweremailWithEmails(testing.OOTestCaseWithCursor):

@@ -16,7 +16,12 @@ from .markdown_utils import normalize_markdown_image_descriptions
 
 
 MARKDOWN_EXTENSIONS = [
-    'markdown.extensions.extra',
+    'markdown.extensions.fenced_code',
+    'markdown.extensions.footnotes',
+    'markdown.extensions.attr_list',
+    'markdown.extensions.def_list',
+    'markdown.extensions.tables',
+    'markdown.extensions.abbr',
     'markdown.extensions.sane_lists',
 ]
 MARKDOWN_TAB_LENGTH = 2
