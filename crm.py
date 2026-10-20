@@ -18,6 +18,7 @@ from .markdown_utils import normalize_markdown_image_descriptions
 MARKDOWN_EXTENSIONS = [
     'markdown.extensions.extra',
     'markdown.extensions.sane_lists',
+    'markdown.extensions.fenced_code'
 ]
 MARKDOWN_TAB_LENGTH = 2
 
