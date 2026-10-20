@@ -6,7 +6,6 @@ from qreu.address import Address
 from addons import get_module_resource
 from html2text import html2text
 
-import email
 import logging
 import re
 
@@ -439,19 +438,9 @@ class TestCRMPoweremail(testing.OOTestCase):
         self.assertEqual(other_attachment.res_id, other_case_id)
 
     def test_email_send_sends_markdown_images_inline(self):
-        """Test markdown image attachments are sent as inline MIME parts."""
+        """Test markdown images are passed to PowerEmail as inline payloads."""
         self.logger.info('Testing markdown images are sent inline')
         from mock import patch
-        from qreu.sendcontext import Sender
-
-        class CaptureSender(Sender):
-            def __init__(self):
-                super(CaptureSender, self).__init__()
-                self.mime_string = None
-
-            def sendmail(self, mail):
-                self.mime_string = mail.mime_string
-                return True
 
         case_obj = self.pool.get('crm.case')
         attachment_obj = self.pool.get('ir.attachment')
@@ -492,40 +481,23 @@ class TestCRMPoweremail(testing.OOTestCase):
             ('folder', '=', 'outbox')
         ])
         mailbox = mailbox_obj.browse(self.cursor, self.uid, mailbox_ids[0])
-        sender = CaptureSender()
 
-        with patch.object(account_obj, 'get_sender', return_value=sender):
+        with patch.object(account_obj, 'send_mail', return_value=True) as send:
             mailbox_obj.send_this_mail(self.cursor, self.uid, [mailbox.id])
 
-        message = email.message_from_string(sender.mime_string)
-        self.assertEqual(message.get_content_type(), 'multipart/related')
-        html_parts = [
-            part.get_payload(decode=True).decode(
-                part.get_content_charset() or 'utf-8'
-            )
-            for part in message.walk()
-            if part.get_content_type() == 'text/html'
-        ]
-        inline_parts = [
-            part for part in message.walk()
-            if part.get('Content-ID') ==
-            '<poweremail-attachment-{0}@local>'.format(attachment_id)
-        ]
-
-        self.assertEqual(len(html_parts), 1)
+        body = send.call_args[0][5]
+        payload = send.call_args[1]['payload']
+        content_id = 'poweremail-attachment-{0}@local'.format(attachment_id)
         self.assertIn(
-            'src="cid:poweremail-attachment-{0}@local"'.format(
-                attachment_id
-            ),
-            html_parts[0]
+            'src="cid:{0}"'.format(content_id), body['html']
         )
-        self.assertFalse(re.search(r'attachment://{0}'.format(attachment_id),
-                                   html_parts[0]))
-        self.assertEqual(len(inline_parts), 1)
+        self.assertFalse(
+            re.search(r'attachment://{0}'.format(attachment_id), body['html'])
+        )
         self.assertEqual(
-            inline_parts[0].get('Content-Disposition'),
-            'inline; filename="logo.png"'
+            payload['logo.png']['disposition'], 'inline'
         )
+        self.assertEqual(payload['logo.png']['content_id'], content_id)
 
     def test_incoming_html_inline_images_are_markdown_attachments(self):
         """Test incoming HTML images reference saved attachments in markdown."""
