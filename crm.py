@@ -500,6 +500,8 @@ class CrmCase(osv.osv):
                 'som': False,
                 'canal_id': False,
             })
+            if context.get('ignore_mail'):
+                continue
             emails = [case.email_from]
             if case.email_cc:
                 context['email_cc'] = list(set(
@@ -587,7 +589,7 @@ class CrmCaseRule(osv.osv):
         'pm_template_id': fields.many2one(
             'poweremail.templates', 'Poweremail Template', ondelete='restrict')
     }
-    
+
     def get_email_addresses(self, cr, uid, rule_id, case, context):
         """
         Override CRM.Case get_email_addresses
