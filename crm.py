@@ -590,7 +590,6 @@ class CrmCaseRule(osv.osv):
             'poweremail.templates', 'Poweremail Template', ondelete='restrict')
     }
 
-
     def get_email_addresses(self, cr, uid, rule_id, case, context):
         """
         Override CRM.Case get_email_addresses
@@ -688,16 +687,15 @@ class CrmCaseRule(osv.osv):
                 lang = config.get('language', False) or False
         if lang:
             ctx['lang'] = lang
-            template_body = pm_template_obj.read(
-                cr, uid, action_template, ['def_body_text'], ctx)[
-                'def_body_text']
-            body = template_body or action_body
-            body_mako_tpl = Template(body, input_encoding='utf-8')
-            rendered_body = body_mako_tpl.render(
-                object=case,
-                date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            )
-            return rendered_body
+        template_body = pm_template_obj.read(
+            cr, uid, action_template, ['def_body_text'], ctx)['def_body_text']
+        body = template_body or action_body
+        body_mako_tpl = Template(body, input_encoding='utf-8')
+        rendered_body = body_mako_tpl.render(
+            object=case,
+            date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        )
+        return rendered_body
 
 
 CrmCaseRule()
