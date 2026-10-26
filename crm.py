@@ -691,9 +691,29 @@ class CrmCaseRule(osv.osv):
             cr, uid, action_template, ['def_body_text'], ctx)['def_body_text']
         body = template_body or action_body
         body_mako_tpl = Template(body, input_encoding='utf-8')
+
+        env = context.copy()
+        env.update({
+            'user': self.pool.get('res.users').simple_browse(
+                cr, uid, uid, context=ctx
+            ),
+            'db': cr.dbname
+        })
+        values = {
+            'pool': case.pool,
+            'cursor': cr,
+            'uid': uid,
+            'peobject': case,
+            'env': env,
+            'format_exceptions': True,
+            'template': pm_template,
+            'lang': ctx['lang']
+        }
+
         rendered_body = body_mako_tpl.render(
             object=case,
             date_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            **values
         )
         return rendered_body
 
